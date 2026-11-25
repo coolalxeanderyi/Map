@@ -1,0 +1,15 @@
+name: probe
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/probe.yml"]
+jobs:
+  p:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          U="https://data.ntpc.gov.tw/api/datasets/07f7ccb3-ed00-43c4-966d-08e9dab24e95/json"
+          echo "== CORS headers (size=1000)"; curl -s -D - -o /dev/null -H "Origin: https://coolalxeanderyi.github.io" "$U?page=0&size=1000" | grep -i -E "^HTTP|access-control|content-encoding|content-length"
+          for s in 5000 20000 50000; do echo "== size=$s"; curl -s --compressed -w "time=%{time_total}s bytes=%{size_download}\n" -o /tmp/o.json "$U?page=0&size=$s"; python3 -c "import json;print('rows',len(json.load(open('/tmp/o.json'))))"; done
+          echo "== gzip transfer size for size=50000"; curl -s -H "Accept-Encoding: gzip" -o /tmp/g -w "gz_bytes=%{size_download}\n" "$U?page=0&size=50000"
+          echo "== filter tests"; curl -s "$U?page=0&size=5&filters=StopID%3D12345" | head -c 300; echo
