@@ -120,7 +120,7 @@ label.big{display:block;font-size:23px;font-weight:900;margin-bottom:10px}
 <div class="chips" id="fcat"></div>
 </section>
 <div class="food" id="flist"></div>
-<p class="note">店家資料整理自食尚玩家（2023）、蕃薯藤旅遊（2019）等美食報導，營業時間和價格可能已經改變，出門前可以先按「地圖」看最新資訊。</p>
+<p class="note">營業時間和價格可能會改變，出門前可以先按「地圖」看最新資訊。</p>
 </div>
 </div>
 
@@ -349,44 +349,29 @@ $('stops').addEventListener('click',e=>{const b=e.target.closest('button');if(b)
 loadBus();setInterval(()=>{if(!document.hidden)loadBus()},60000);
 
 /* ---------- 美食 ---------- */
-// h: 營業時間 [[開,關],...]（24 小時制，小數 .5 = 30 分）；off: 公休（0=星期日）
-const FOOD=[
- {n:'土城芋頭之家',c:'甜點',eat:'芋頭冰 <b>65 元</b>；冬天有熱的芋頭甜湯',a:'學府路一段262號',h:[[9,22]],off:[],t:'02-2260-0740',why:'就在學府路上，在地老店，常常排隊'},
- {n:'兩支北方麵食館',c:'麵飯',eat:'紅燒牛肉麵 <b>180 元</b>（牛肉燉得很軟）、湯包 6 顆 115 元',a:'裕民路129號',h:[[11,14],[17,21]],off:[],t:'02-2262-9888',why:'得過牛肉麵比賽金牌，海山站走路 5 分鐘'},
- {n:'正宗岡山羊肉',c:'麵飯',eat:'羊肉炒麵 <b>95 元</b>、當歸羊大骨湯 100 元（湯可以免費續）',a:'明德路二段72-3號',h:[[11,14],[17,21]],off:[2],t:'02-8273-2526',why:'網友說是土城最好吃的羊肉，冬天補身體'},
- {n:'阿城鵝肉（總店）',c:'麵飯',eat:'鵝肉、清蒸鵝米血 <b>45 元</b>',a:'清水路78號',h:[[11,20]],off:[],t:'02-8261-9747',why:'有名的鵝肉老店'},
- {n:'員山排骨',c:'麵飯',eat:'排骨飯 <b>90 元</b>（附滷蛋，配菜選 3 樣）、炸雞腿 60 元',a:'青雲路182號',h:[[11,13.5],[16.5,19.5]],off:[0,6],t:'02-2261-2611',why:'只開平日，排隊排到馬路上'},
- {n:'啖餅坊手工蛋餅',c:'早餐',eat:'高麗菜蛋餅（手工現桿餅皮，很有飽足感）',a:'裕民路92巷21弄14號',h:[[6,16]],off:[2],why:'生意很好，可以前一天先用 LINE 預訂'},
- {n:'無名早餐店',c:'早餐',eat:'漢堡蛋 + 奶茶（自己做的漢堡肉）',a:'裕民路136巷4弄（轉角）',h:null,off:[1],why:'開了幾十年的露天早餐店'},
- {n:'好鬆',c:'早餐',eat:'舒芙蕾鬆餅，軟綿綿很好咬',a:'裕民路136巷4弄6號',h:[[7.5,14]],off:[],why:'口感很軟，適合牙口不好'},
- {n:'勝男家',c:'麵飯',eat:'胡麻乾拌麵、紅燒牛肉拉麵',a:'裕民路92巷16弄8號',h:[[11.5,14.5],[17,23]],off:[],t:'02-2265-0058',why:'海山站附近的人氣麵店'},
- {n:'找。漢堡 Found Burger',c:'小吃',eat:'牛肉漢堡、奶油寬麵、法式吐司 40 元',a:'裕民路92巷21弄12號',h:[[11.5,21]],off:[3],why:'週末早上 9 點就開，適合帶孫子去'},
- {n:'海山站檸檬香雞排',c:'小吃',eat:'脆皮檸檬香草雞排',a:'裕民路92巷23弄1號',h:[[16,23]],off:[0],why:'先打電話訂比較不用等'},
- {n:'Gamma 霜淇淋',c:'甜點',eat:'每天換口味的霜淇淋、無糖果汁',a:'裕民路92巷20號',h:[[16.5,22]],off:[],why:'下午散步可以吃一支'},
- {n:'Qasim Coffee',c:'甜點',eat:'老闆自己烘的咖啡',a:'裕民路114巷18號',h:[[7.5,20.5]],off:[],why:'小小一間，很安靜'},
- {n:'爆漿蛋餅',c:'早餐',eat:'爆漿蛋餅 <b>40 元</b>',a:'學成路136號',h:null,off:[],why:'銅板價早餐'},
- {n:'工業區烏醋麵',c:'麵飯',eat:'烏醋麵（早餐、午餐）',a:'中央路四段25-7號',h:[[6,14.5]],off:[0],t:'02-2268-7880',why:'在頂埔那邊，坐捷運去頂埔順便吃'}
-];
-const CATS=['全部','現在有開','早餐','麵飯','小吃','甜點'];
+// 美食資料放在 food.json（可以用 admin.html 後台修改）
+let FOOD=[],FCATS=['早餐','麵飯','小吃','甜點'];
+const parseH=h=>(h||'').split(/[,，、]/).map(x=>x.trim()).filter(Boolean).map(r=>r.split(/[-~～]/).map(t=>{const [H,M]=t.trim().split(/[:：]/);return +H+(+M||0)/60})).filter(r=>r.length===2&&r.every(x=>!isNaN(x)));
+const CATS=()=>['全部','現在有開',...FCATS];
 let fc='全部';
 const now=()=>{const d=new Date();return{day:d.getDay(),t:d.getHours()+d.getMinutes()/60}};
-const status=f=>{if(!f.h)return null;const {day,t}=now();if(f.off.includes(day))return false;return f.h.some(([a,b])=>t>=a&&t<b)};
-const fmt=x=>`${Math.floor(x)}:${x%1?'30':'00'}`;
-const hours=f=>{const w='日一二三四五六';let s=f.h?f.h.map(([a,b])=>fmt(a)+'～'+fmt(b)).join('、'):'營業時間不確定';if(f.off.length)s+=`（星期${f.off.map(d=>w[d]).join('、')}休息）`;return s};
+const status=f=>{const H=parseH(f.h);if(!H.length)return null;const {day,t}=now();if((f.off||[]).includes(day))return false;return H.some(([a,b])=>t>=a&&t<b)};
+const fmt=x=>`${Math.floor(x)}:${String(Math.round(x%1*60)).padStart(2,'0')}`;
+const hours=f=>{const w='日一二三四五六',H=parseH(f.h);let s=H.length?H.map(([a,b])=>fmt(a)+'～'+fmt(b)).join('、'):'營業時間不確定';if((f.off||[]).length)s+=`（星期${f.off.map(d=>w[d]).join('、')}休息）`;return s};
 function drawFood(){
- $('fcat').innerHTML=CATS.map(c=>`<button type="button" aria-pressed="${c===fc}" data-c="${c}">${c==='現在有開'?'🟢 ':''}${c}</button>`).join('');
+ $('fcat').innerHTML=CATS().map(c=>`<button type="button" aria-pressed="${c===fc}" data-c="${c}">${c==='現在有開'?'🟢 ':''}${c}</button>`).join('');
  const list=FOOD.filter(f=>fc==='全部'||(fc==='現在有開'?status(f)===true:f.c===fc));
  $('flist').innerHTML=list.length?list.map(f=>{const st=status(f);return`<article class="fc">
   <div class="top"><h3>${esc(f.n)}</h3><span class="tag ${esc(f.c)}">${esc(f.c)}</span></div>
-  <p class="eat">🍽️ ${f.eat}</p>
+  <p class="eat">🍽️ ${esc(f.eat)}${f.price?` <b>${esc(f.price)}</b>`:''}</p>
   <p class="meta">${st===true?'<span class="open">● 現在有開</span>　':st===false?'<span class="closed">● 現在沒開</span>　':''}🕐 ${esc(hours(f))}</p>
   <p class="meta">📍 土城區${esc(f.a)}${f.t?'　☎ '+esc(f.t):''}</p>
-  <p class="meta">💬 ${esc(f.why)}</p>
+  ${f.why?`<p class="meta">💬 ${esc(f.why)}</p>`:''}
   <div class="acts"><a class="btn" href="${gsearch('土城 '+f.n.replace(/（.*）/,''))}">🗺️ 地圖</a><a class="btn ghost" href="${gdir('新北市土城區'+f.a,'walking')}">🚶 從家走過去</a></div>
  </article>`}).join(''):'<section class="card"><p>現在這個時間沒有店開著，晚一點再看看！</p></section>';
 }
 $('fcat').addEventListener('click',e=>{const b=e.target.closest('button');if(b){fc=b.dataset.c;drawFood()}});
-drawFood();
+fetch('food.json?t='+Date.now(),{cache:'no-store'}).then(r=>r.json()).then(d=>{FOOD=d.items||[];if(d.categories&&d.categories.length)FCATS=d.categories;drawFood()}).catch(()=>{$('flist').innerHTML='<section class="card"><p>美食清單暫時讀不到，晚一點再看看。</p></section>'});
 }
 </script>
 </body>

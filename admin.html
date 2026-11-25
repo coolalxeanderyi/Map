@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<title>美食後台｜土城小幫手</title>
+<link href="https://fonts.googleapis.com/css2?family=Huninn&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+/*
+VOICE: a tidy little workshop for the grandson — same cute world as the front page, but a working tool.
+IDEA: a recipe-card box: each shop is an index card you flip open and edit.
+PICTURE: the editable card list itself, with a live "how it will look" line on each card.
+COLOUR and TYPE: cream paper, sky blue, peach pink, mint; Huninn rounded.
+LAYOUT: settings strip on top, card list, sticky save bar at the bottom.
+*/
+:root{color-scheme:light;--bg:#fff7ec;--card:#fff;--ink:#3d3030;--soft:#7a6a64;--blue:#4a9fe0;--hot:#ff7a8a;--mint:#3cb07f;--line:#f1e2d3}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg) radial-gradient(#ffd9c4 1.6px,transparent 1.8px) 0 0/26px 26px;color:var(--ink);font:17px/1.5 "Huninn","Noto Sans TC","PingFang TC",sans-serif;padding-bottom:110px}
+.wrap{max-width:820px;margin:0 auto;padding:0 14px}
+header{background:linear-gradient(180deg,#8fd0ff,#bfe5ff);padding:16px 14px;border-radius:0 0 24px 24px;margin-bottom:16px}
+header h1{margin:0 auto;max-width:820px;font-size:24px;color:#20466b}
+header p{margin:4px auto 0;max-width:820px;color:#3b6a92;font-size:15px}
+.box{background:var(--card);border-radius:20px;padding:16px;margin:14px 0;box-shadow:0 5px 0 var(--line)}
+h2{font-size:20px;margin:0 0 8px}
+label{display:block;font-size:14px;color:var(--soft);margin:8px 0 3px;font-weight:700}
+input,select,textarea{width:100%;font:inherit;font-size:16px;padding:9px 12px;border-radius:12px;border:2px solid #d8e9f7;background:#fbfdff;color:var(--ink)}
+textarea{min-height:60px;resize:vertical}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--blue)}
+.g2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 12px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:4px;min-height:44px;padding:6px 16px;border-radius:999px;border:0;background:var(--blue);color:#fff;font:inherit;font-weight:700;cursor:pointer;box-shadow:0 3px 0 #2f7fbf;margin:4px 4px 4px 0}
+.btn.hot{background:var(--hot);box-shadow:0 3px 0 #e0566a}.btn.mint{background:var(--mint);box-shadow:0 3px 0 #2a8a60}.btn.soft{background:#e6f3ff;color:#20466b;box-shadow:0 3px 0 #c7e2f8}
+.btn:active{transform:translateY(2px);box-shadow:none}.btn:disabled{opacity:.5}
+.btn:focus-visible,input:focus-visible{outline:3px solid var(--hot);outline-offset:2px}
+details.item{background:var(--card);border-radius:20px;margin:12px 0;box-shadow:0 5px 0 var(--line)}
+details.item>summary{list-style:none;cursor:pointer;padding:14px 16px;display:flex;align-items:center;gap:10px}
+details.item>summary::-webkit-details-marker{display:none}
+summary .nm{font-weight:900;font-size:19px;flex:1}
+summary .tg{font-size:13px;background:#fff1d6;border-radius:999px;padding:2px 10px}
+summary .pv{display:block;font-size:14px;color:var(--soft);font-weight:400}
+.body{padding:0 16px 14px;border-top:2px dashed var(--line)}
+.days{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.days label{display:inline-flex;align-items:center;gap:4px;margin:0;background:#fff7ec;border-radius:999px;padding:4px 10px;color:var(--ink);font-weight:700}
+.days input{width:auto}
+.tools{display:flex;flex-wrap:wrap;gap:4px;margin-top:10px}
+.bar{position:fixed;left:0;right:0;bottom:0;background:rgba(255,255,255,.95);border-top:3px solid var(--line);padding:10px 14px;z-index:5}
+.bar .wrap{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+#msg{flex:1;font-weight:700;font-size:15px}
+.ok{color:var(--mint)}.err{color:#d9485c}
+.note{color:var(--soft);font-size:14px}
+code{background:#fff1d6;border-radius:6px;padding:0 4px}
+@media(max-width:560px){.g2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header><h1>🍜 美食後台</h1><p>在這裡改的內容，存檔後約 1 分鐘就會出現在爺奶的網頁上。</p></header>
+<div class="wrap">
+
+<section class="box" id="setup">
+<h2>🔑 GitHub 權杖</h2>
+<p class="note">存檔需要一把只能改 <code>Map</code> 這個 repo 的權杖。權杖只會存在這台裝置的瀏覽器裡，不會上傳到任何地方。</p>
+<details><summary class="note" style="cursor:pointer">怎麼拿權杖？（點我）</summary>
+<ol class="note">
+<li>打開 <a href="https://github.com/settings/personal-access-tokens/new">github.com/settings/personal-access-tokens/new</a></li>
+<li>名字隨便取（例如「美食後台」），到期日可以選久一點</li>
+<li>Repository access 選 <b>Only select repositories</b> → 選 <b>Map</b></li>
+<li>Permissions → Repository permissions → <b>Contents</b> 選 <b>Read and write</b></li>
+<li>按 Generate token，把出現的那串字貼到下面</li>
+</ol></details>
+<label for="tok">權杖</label>
+<input id="tok" type="password" placeholder="github_pat_…" autocomplete="off">
+<label style="display:flex;align-items:center;gap:6px;color:var(--ink)"><input type="checkbox" id="rem" style="width:auto" checked> 在這台裝置記住權杖</label>
+<button class="btn" id="load" type="button">📥 讀取目前的美食清單</button>
+</section>
+
+<section class="box" id="catBox" hidden>
+<h2>🏷️ 分類</h2>
+<label for="cats">用逗號隔開（第一頁的篩選按鈕會照這個順序）</label>
+<input id="cats">
+</section>
+
+<div id="list"></div>
+<button class="btn mint" id="add" type="button" hidden>➕ 新增一家店</button>
+</div>
+
+<div class="bar"><div class="wrap">
+<span id="msg" class="note">先貼上權杖，再按「讀取」。</span>
+<a class="btn soft" href="./" target="_blank">👀 看網頁</a>
+<button class="btn hot" id="save" type="button" disabled>💾 儲存</button>
+</div></div>
+
+<script>
+{
+const REPO='coolalxeanderyi/Map',PATH='food.json',API=`https://api.github.com/repos/${REPO}/contents/${PATH}`;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const W='日一二三四五六';
+let items=[],cats=[],sha=null,dirty=false;
+try{const t=localStorage.getItem('ghTok');if(t)$('tok').value=t}catch(e){}
+const msg=(t,c='')=>{$('msg').textContent=t;$('msg').className=c};
+const hdr=()=>({Authorization:'Bearer '+$('tok').value.trim(),Accept:'application/vnd.github+json'});
+const b64d=s=>new TextDecoder().decode(Uint8Array.from(atob(s.replace(/\n/g,'')),c=>c.charCodeAt(0)));
+const b64e=s=>{const u=new TextEncoder().encode(s);let b='';u.forEach(x=>b+=String.fromCharCode(x));return btoa(b)};
+
+async function load(){
+ if(!$('tok').value.trim()){msg('請先貼上權杖。','err');return}
+ try{if($('rem').checked)localStorage.setItem('ghTok',$('tok').value.trim());else localStorage.removeItem('ghTok')}catch(e){}
+ msg('讀取中……');
+ try{
+  const r=await fetch(API+'?ref=main&t='+Date.now(),{headers:hdr(),cache:'no-store'});
+  if(r.status===401||r.status===403){msg('權杖不對或沒有權限，請檢查權杖設定。','err');return}
+  if(!r.ok)throw new Error(r.status);
+  const j=await r.json();sha=j.sha;const d=JSON.parse(b64d(j.content));
+  items=d.items||[];cats=d.categories||['早餐','麵飯','小吃','甜點'];
+  $('cats').value=cats.join(', ');$('catBox').hidden=false;$('add').hidden=false;$('save').disabled=false;
+  draw();dirty=false;msg(`讀到 ${items.length} 家店。改完記得按「儲存」。`,'ok');
+ }catch(e){msg('讀取失敗：'+e.message,'err')}
+}
+const preview=f=>[f.c,f.price,f.h||'時間不確定',(f.off||[]).length?'休'+f.off.map(d=>W[d]).join(''):''].filter(Boolean).join('・');
+function card(f,i){
+ return `<details class="item" data-i="${i}"><summary><span class="nm">${esc(f.n||'（還沒取名字）')}<span class="pv">${esc(preview(f))}</span></span><span class="tg">${esc(f.c)}</span></summary>
+ <div class="body">
+  <div class="g2"><div><label>店名</label><input data-k="n" value="${esc(f.n)}"></div>
+  <div><label>分類</label><select data-k="c">${cats.map(c=>`<option ${c===f.c?'selected':''}>${esc(c)}</option>`).join('')}</select></div></div>
+  <div class="g2"><div><label>推薦吃什麼</label><input data-k="eat" value="${esc(f.eat)}"></div>
+  <div><label>價錢（會用紅字顯示，可以空白）</label><input data-k="price" value="${esc(f.price)}" placeholder="例如 90 元"></div></div>
+  <div class="g2"><div><label>地址（不用寫「土城區」）</label><input data-k="a" value="${esc(f.a)}"></div>
+  <div><label>電話</label><input data-k="t" value="${esc(f.t)}" inputmode="tel"></div></div>
+  <label>營業時間（例如 <code>11:00-14:00, 17:00-21:00</code>，不知道就空白）</label><input data-k="h" value="${esc(f.h)}">
+  <label>公休日</label><div class="days">${[0,1,2,3,4,5,6].map(d=>`<label><input type="checkbox" data-off="${d}" ${(f.off||[]).includes(d)?'checked':''}>星期${W[d]}</label>`).join('')}</div>
+  <label>一句話介紹（給爺奶看的）</label><textarea data-k="why">${esc(f.why)}</textarea>
+  <div class="tools"><button class="btn soft" data-act="up" type="button">⬆️ 往上</button><button class="btn soft" data-act="down" type="button">⬇️ 往下</button><button class="btn hot" data-act="del" type="button">🗑️ 刪除</button></div>
+ </div></details>`;
+}
+function draw(open=-1){
+ $('list').innerHTML=items.map(card).join('');
+ if(open>=0){const d=$('list').children[open];if(d){d.open=true;d.scrollIntoView({behavior:'smooth',block:'center'})}}
+}
+$('list').addEventListener('input',e=>{
+ const d=e.target.closest('details');if(!d)return;const f=items[+d.dataset.i];
+ if(e.target.dataset.k)f[e.target.dataset.k]=e.target.value;
+ if(e.target.dataset.off!=null)f.off=[...d.querySelectorAll('[data-off]')].filter(x=>x.checked).map(x=>+x.dataset.off);
+ d.querySelector('summary').innerHTML=`<span class="nm">${esc(f.n||'（還沒取名字）')}<span class="pv">${esc(preview(f))}</span></span><span class="tg">${esc(f.c)}</span>`;
+ dirty=true;msg('有改動，還沒儲存。');
+});
+$('list').addEventListener('click',e=>{
+ const b=e.target.closest('[data-act]');if(!b)return;const i=+b.closest('details').dataset.i;
+ if(b.dataset.act==='del'){if(b.dataset.sure){items.splice(i,1);draw()}else{b.dataset.sure=1;b.textContent='再按一次確定刪除';return}}
+ if(b.dataset.act==='up'&&i>0){[items[i-1],items[i]]=[items[i],items[i-1]];draw(i-1)}
+ if(b.dataset.act==='down'&&i<items.length-1){[items[i+1],items[i]]=[items[i],items[i+1]];draw(i+1)}
+ dirty=true;msg('有改動，還沒儲存。');
+});
+$('cats').addEventListener('change',()=>{cats=$('cats').value.split(/[,，、]/).map(x=>x.trim()).filter(Boolean);draw();dirty=true;msg('有改動，還沒儲存。')});
+$('add').addEventListener('click',()=>{items.unshift({n:'',c:cats[0]||'',eat:'',price:'',a:'',h:'',off:[],t:'',why:''});draw(0);dirty=true;msg('新增了一家店，填好後按「儲存」。')});
+$('load').addEventListener('click',load);
+$('save').addEventListener('click',async()=>{
+ const bad=items.findIndex(f=>!String(f.n||'').trim());
+ if(bad>=0){draw(bad);msg('有一家店還沒填店名。','err');return}
+ $('save').disabled=true;msg('儲存中……');
+ const body=JSON.stringify({categories:cats,items},null,1)+'\n';
+ try{
+  const r=await fetch(API,{method:'PUT',headers:{...hdr(),'Content-Type':'application/json'},body:JSON.stringify({message:'後台更新美食清單',content:b64e(body),sha,branch:'main'})});
+  if(r.status===409){msg('有人在別的地方也改過，請重新「讀取」後再改一次。','err');return}
+  if(!r.ok)throw new Error(r.status+' '+(await r.text()).slice(0,80));
+  sha=(await r.json()).content.sha;dirty=false;msg('✅ 儲存成功！大約 1 分鐘後網頁就會更新。','ok');
+ }catch(e){msg('儲存失敗：'+e.message,'err')}finally{$('save').disabled=false}
+});
+window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue=''}});
+if($('tok').value)load();
+}
+</script>
+</body>
+</html>
