@@ -39,7 +39,7 @@ h3{font-size:23px;margin:6px 0 8px}
 .note{color:var(--soft);font-size:16px}
 label.big{display:block;font-size:23px;font-weight:900;margin-bottom:10px}
 .search{display:flex;gap:8px}
-.search input{flex:1;font:inherit;font-size:24px;padding:12px 18px;border-radius:999px;border:3px solid #cfe7fb;background:#fbfdff;color:var(--ink);min-height:62px}
+.search input{flex:1;width:0;font:inherit;font-size:22px;padding:12px 14px;border-radius:999px;border:3px solid #cfe7fb;background:#fbfdff;color:var(--ink);min-height:62px}
 .search input:focus{border-color:var(--blue)}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:58px;padding:8px 20px;border-radius:999px;background:var(--blue);color:#fff;text-decoration:none;font-family:inherit;font-weight:900;font-size:20px;border:0;cursor:pointer;margin:5px 6px 5px 0;text-align:center;box-shadow:0 4px 0 #2f7fbf;transition:transform .1s}
 .btn:active,.chips button:active{transform:translateY(3px);box-shadow:none}
@@ -90,6 +90,19 @@ label.big{display:block;font-size:23px;font-weight:900;margin-bottom:10px}
 .direct .no{display:inline-block;background:var(--mint);color:#fff;font-weight:900;font-size:24px;border-radius:12px;padding:0 12px;margin-right:6px}
 .direct .live{display:inline-block;margin-top:6px;font-weight:900;background:#fff;border-radius:999px;padding:2px 12px}
 .direct .live.soon{background:var(--hot);color:#fff}
+.topbar{display:flex;flex-direction:column;align-items:flex-end;gap:10px;margin-top:14px}
+.wx{align-self:stretch;display:flex;gap:12px;align-items:center;background:linear-gradient(135deg,#fff6d6,#ffe8ec);border-radius:24px;padding:12px 16px;box-shadow:0 5px 0 var(--line)}
+.wxi{font-size:42px;line-height:1;flex:none}
+.wxt{line-height:1.35}
+#wxMain{font-size:21px;font-weight:900}
+#wxMain .tmp{font-size:34px;color:#e0566a;margin-right:4px}
+.wxtip{font-size:18px;font-weight:700;color:#7a4b00;margin-top:4px}.wxtip div{margin:2px 0}
+.fsz{border:0;border-radius:999px;background:#fff;box-shadow:0 4px 0 var(--line);font-family:inherit;font-size:17px;font-weight:700;cursor:pointer;color:var(--ink);min-height:48px;padding:4px 16px;display:flex;align-items:center;gap:4px}
+.fsz{white-space:nowrap}.fsz small{font-size:15px;color:var(--soft)}.fsz b{font-size:24px;line-height:1}.fsz span{color:#e0566a;font-weight:900}
+.fsz:active{transform:translateY(3px);box-shadow:none}
+.wrap{zoom:var(--z,1)}
+#toast{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%);background:#3d3030;color:#fff;font-size:28px;font-weight:900;border-radius:20px;padding:16px 26px;z-index:60;pointer-events:none;opacity:0;transition:opacity .25s}
+#toast.on{opacity:.92}
 </style>
 </head>
 <body>
@@ -109,11 +122,15 @@ label.big{display:block;font-size:23px;font-weight:900;margin-bottom:10px}
 </header>
 
 <div class="wrap">
+<div class="topbar">
+<section class="wx" id="wx" aria-live="polite"><span class="wxi" id="wxIcon">🌤️</span><div class="wxt"><div id="wxMain">天氣讀取中……</div><div id="wxTip" class="wxtip"></div></div></section>
+<button class="fsz" id="fsz" type="button" aria-label="調整字的大小"><b>字</b> 大小：<span id="fszLab">標準</span><small>（按一下換）</small></button>
+</div>
 <!-- ================= 交通 ================= -->
 <div id="p-go" role="tabpanel">
 <section class="card">
 <label class="big" for="q">🌸 想去哪裡玩呀？打字或按下面的地方</label>
-<form class="search" id="f"><input id="q" type="search" placeholder="例如：台北101、淡水 🚃" autocomplete="off"><button class="btn hot" type="submit">查</button></form>
+<form class="search" id="f"><input id="q" type="search" placeholder="例如：淡水 🚃" autocomplete="off"><button class="btn hot" type="submit">查</button></form>
 <div class="chips" id="pop"></div>
 <div id="learned"></div>
 <div class="from"><span>從哪一站出發：</span><select id="start"></select></div>
@@ -144,6 +161,7 @@ label.big{display:block;font-size:23px;font-weight:900;margin-bottom:10px}
 <p class="addr">新北市土城區<br>學府路一段98巷<br>30之1號<br><span>（學府之森）</span></p>
 <div class="dbtns"><a class="btn" id="navHome" href="#">🗺️ 我自己走回家（導航）</a><button class="btn hot" id="closeDriver" type="button">關閉</button></div>
 </div>
+<div id="toast" role="status"></div>
 <div id="offline" hidden>📵 現在沒有網路：公車時間、查新地方暫時不能用，其他都可以看。</div>
 <script>
 {
@@ -163,6 +181,38 @@ $('navHome').href=`https://www.google.com/maps/dir/?api=1&destination=${encodeUR
 const net=()=>{$('offline').hidden=navigator.onLine};
 addEventListener('online',()=>{net();loadBus&&loadBus()});addEventListener('offline',net);net();
 if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
+
+/* ---------- 字的大小（記在手機裡） ---------- */
+const SIZES=[['標準',1],['大',1.12],['特大',1.25]];
+let fs=0;try{fs=Math.min(2,+localStorage.getItem('fontSize')||0)}catch(e){}
+const applyFs=()=>{document.documentElement.style.setProperty('--z',SIZES[fs][1]);$('fszLab').textContent=SIZES[fs][0]};
+applyFs();
+let toastT;const toast=t=>{const el=$('toast');el.textContent=t;el.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('on'),1300)};
+$('fsz').addEventListener('click',()=>{fs=(fs+1)%SIZES.length;applyFs();try{localStorage.setItem('fontSize',fs)}catch(e){}toast(fs?`字變${SIZES[fs][0]}了`:'字變回標準');});
+
+/* ---------- 天氣（Open-Meteo，免費、不用金鑰） ---------- */
+const WX=c=>c===0?['☀️','晴天']:c<=2?['🌤️','晴時多雲']:c===3?['☁️','陰天']:c<=48?['🌫️','有霧']:c<=57?['🌦️','毛毛雨']:c<=67?['🌧️','下雨']:c<=77?['🌨️','下雪']:c<=82?['🌧️','陣雨']:['⛈️','雷雨'];
+function drawWx(w,old){
+ const cur=w.current,d=w.daily,t=Math.round(cur.temperature_2m),feel=Math.round(cur.apparent_temperature),lo=Math.round(d.temperature_2m_min[0]),hi=Math.round(d.temperature_2m_max[0]),rain=d.precipitation_probability_max[0];
+ const [ic,txt]=WX(cur.weather_code);
+ $('wxIcon').textContent=ic;
+ $('wxMain').innerHTML=`<span class="tmp">${t}°</span>土城現在${txt}`;
+ const tips=[`🌡️ 今天 ${lo}～${hi} 度`];
+ if(Math.abs(feel-t)>=3)tips[0]+=`，感覺像 ${feel} 度`;
+ if(rain>=50)tips.push(`☂️ 下雨機率 ${rain}%，出門記得帶傘`);else if(rain>=30)tips.push(`🌂 可能會下雨（${rain}%），帶把小傘比較安心`);
+ if(lo<=10)tips.push('🧣 非常冷！要穿厚外套、戴帽子圍巾');else if(lo<=16)tips.push('🧥 有點冷，記得穿外套');
+ if(hi>=32)tips.push('🥤 很熱，多喝水，中午少出門');
+ if(tips.length===1)tips.push('😊 天氣不錯，適合出門走走');
+ if(old)tips.push(`（${old} 的資料）`);
+ $('wxTip').innerHTML=tips.map(x=>`<div>${esc(x)}</div>`).join('');
+}
+async function loadWx(){
+ const u='https://api.open-meteo.com/v1/forecast?latitude=24.98&longitude=121.45&current=temperature_2m,apparent_temperature,weather_code&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FTaipei&forecast_days=1';
+ try{const w=await (await fetch(u)).json();if(!w.current)throw 0;drawWx(w);try{localStorage.setItem('wx',JSON.stringify({at:Date.now(),w}))}catch(e){}}
+ catch(e){try{const c=JSON.parse(localStorage.getItem('wx')||'null');if(c){const dt=new Date(c.at);drawWx(c.w,`${dt.getMonth()+1}/${dt.getDate()} ${dt.getHours()}:${String(dt.getMinutes()).padStart(2,'0')}`);return}}catch(e2){}
+  $('wxMain').textContent='天氣暫時讀不到';$('wxTip').textContent='';}
+}
+loadWx();setInterval(()=>{if(!document.hidden)loadWx()},30*60*1000);
 
 /* ---------- 分頁 ---------- */
 const tabs=[['tab-go','p-go'],['tab-food','p-food']];

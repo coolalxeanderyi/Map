@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#8fd0ff">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="icon" href="icon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-title" content="土城小幫手">
+<title>土城生活小幫手</title>
+<link href="https://fonts.googleapis.com/css2?family=Huninn&family=Chiron+GoRound+TC:wght@400;700;900&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+/*
+VOICE: a cheerful little helper — warm, playful, never childish to read; big round words.
+IDEA: a picture-book sticker album: each answer is a sticker, each MRT line a crayon stripe.
+PICTURE: a smiling little blue train mascot (original) puffing hearts in the header.
+COLOUR and TYPE: cream paper with soft dots, sky blue, peach pink, mint, butter yellow; rounded 粉圓 / Chiron GoRound.
+LAYOUT: bubbly pill tabs, sticker cards with soft shadows, one column.
+*/
+:root{color-scheme:light;--bg:#fff7ec;--card:#ffffff;--ink:#3d3030;--soft:#7a6a64;--blue:#4a9fe0;--blue2:#e6f3ff;--hot:#ff7a8a;--pink2:#ffe8ec;--mint:#4cc49a;--mint2:#e3f8ef;--sun:#ffd66b;--line:#f1e2d3;--ok:#3cb07f}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg) radial-gradient(#ffd9c4 1.6px,transparent 1.8px) 0 0/26px 26px;color:var(--ink);font:20px/1.6 "Huninn","Chiron GoRound TC","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;overflow-x:clip}
+.wrap{max-width:860px;margin:0 auto;padding:0 max(4vw,12px) 80px}
+header{background:linear-gradient(180deg,#8fd0ff,#bfe5ff);padding:12px max(4vw,12px) 0;position:sticky;top:0;z-index:5;border-radius:0 0 28px 28px;box-shadow:0 6px 0 #a9dafc}
+.hd{max-width:860px;margin:0 auto;display:flex;align-items:center;gap:10px}
+.hd svg{flex:none;width:86px;height:64px}
+header h1{margin:0;font-size:25px;line-height:1.2;font-weight:900;color:#20466b}
+header h1 small{display:block;font-size:16px;font-weight:700;color:#3b6a92}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:860px;margin:10px auto 0;padding-bottom:12px}
+.tabs button{font-family:inherit;font-size:25px;font-weight:900;min-height:62px;border:3px solid #fff;border-radius:999px;background:rgba(255,255,255,.55);color:#20466b;cursor:pointer;transition:transform .15s}
+.tabs button[aria-selected=true]{background:#fff;color:var(--hot);box-shadow:0 4px 0 #ffc2cb;transform:translateY(-2px)}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:4px solid var(--hot);outline-offset:2px}
+[hidden]{display:none!important}
+section.card{background:var(--card);border-radius:26px;padding:20px clamp(16px,3vw,26px);margin-top:18px;box-shadow:0 6px 0 var(--line),0 10px 24px rgba(214,170,140,.18)}
+h2{font-size:28px;line-height:1.2;margin:0 0 10px;font-weight:900}
+h3{font-size:23px;margin:6px 0 8px}
+.note{color:var(--soft);font-size:16px}
+label.big{display:block;font-size:23px;font-weight:900;margin-bottom:10px}
+.search{display:flex;gap:8px}
+.search input{flex:1;font:inherit;font-size:24px;padding:12px 18px;border-radius:999px;border:3px solid #cfe7fb;background:#fbfdff;color:var(--ink);min-height:62px}
+.search input:focus{border-color:var(--blue)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:58px;padding:8px 20px;border-radius:999px;background:var(--blue);color:#fff;text-decoration:none;font-family:inherit;font-weight:900;font-size:20px;border:0;cursor:pointer;margin:5px 6px 5px 0;text-align:center;box-shadow:0 4px 0 #2f7fbf;transition:transform .1s}
+.btn:active,.chips button:active{transform:translateY(3px);box-shadow:none}
+.btn.hot{background:var(--hot);box-shadow:0 4px 0 #e0566a}.btn.ghost{background:var(--blue2);color:#20466b;box-shadow:0 4px 0 #c7e2f8}
+.chips{display:flex;flex-wrap:wrap;gap:9px;margin-top:14px}
+.chips button{font-family:inherit;font-size:19px;font-weight:900;min-height:50px;padding:6px 16px;border-radius:999px;border:0;background:var(--c,#fff1d6);color:var(--ink);cursor:pointer;box-shadow:0 3px 0 rgba(0,0,0,.08)}
+.chips button:nth-child(4n+1){--c:#ffe8ec}.chips button:nth-child(4n+2){--c:#e3f8ef}.chips button:nth-child(4n+3){--c:#e6f3ff}.chips button:nth-child(4n){--c:#fff1d6}
+.chips button[aria-pressed=true]{background:var(--hot);color:#fff}
+.from{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:14px;font-size:18px}
+.from select{font:inherit;font-size:19px;padding:8px 14px;border-radius:999px;border:3px solid #cfe7fb;background:#fff;color:var(--ink);min-height:48px}
+.sum{font-size:22px;font-weight:900;margin:6px 0 12px;background:#fff6d6;border-radius:18px;padding:10px 14px}
+.leg{border-radius:20px;background:#fff;border:4px solid var(--c,#0070bd);padding:12px 16px;margin:12px 0;position:relative}
+.leg .ln{display:inline-block;background:var(--c);color:#fff;font-weight:900;border-radius:999px;padding:1px 14px;font-size:18px;text-shadow:0 1px 1px rgba(0,0,0,.3)}
+.leg .dir{font-size:23px;font-weight:900;margin:6px 0 2px}
+.leg .n{font-size:20px}.leg .n b{font-size:32px;color:var(--hot)}
+.walk{padding:10px 16px;margin:8px 0;font-size:19px;background:var(--mint2);border-radius:16px}
+.xfer{font-weight:900;color:#d9485c;padding:8px 16px;font-size:20px;background:var(--pink2);border-radius:16px;margin:8px 0}
+.bus{border-radius:20px;background:var(--mint2);padding:12px 16px;margin:10px 0}
+.food{display:grid;gap:14px;margin-top:14px}
+.fc{background:var(--card);border-radius:24px;padding:16px 18px;box-shadow:0 6px 0 var(--line),0 10px 20px rgba(214,170,140,.15);position:relative}
+.fc .top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.fc h3{margin:0;font-size:24px;line-height:1.25}
+.fc .tag{flex:none;font-size:16px;font-weight:900;border-radius:999px;padding:4px 12px;background:#fff1d6}
+.fc .tag.早餐{background:#fff1d6}.fc .tag.麵飯{background:#ffe8ec}.fc .tag.小吃{background:#e6f3ff}.fc .tag.甜點{background:#e3f8ef}
+.fc .eat{font-size:20px;margin:8px 0;background:#fffaf2;border-radius:14px;padding:8px 12px}
+.fc .eat b{color:#e0566a}
+.fc .meta{font-size:17px;color:var(--soft);margin:6px 0}
+.open{color:#fff;background:var(--ok);font-weight:900;border-radius:999px;padding:1px 10px}.closed{color:#fff;background:#c9a9a6;font-weight:900;border-radius:999px;padding:1px 10px}
+.fc .acts{margin-top:8px}.fc .btn{min-height:50px;font-size:18px}
+@media(prefers-reduced-motion:no-preference){.puff{animation:puff 2.4s ease-in-out infinite}.puff.b{animation-delay:1.2s}@keyframes puff{0%{transform:translate(0,0);opacity:0}30%{opacity:1}100%{transform:translate(-6px,-18px);opacity:0}}.wheel{animation:bob 1.2s ease-in-out infinite;transform-origin:center}@keyframes bob{50%{transform:translateY(-2px)}}}
+.eta{display:grid;gap:10px;margin-top:12px}
+.er{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;background:#fffaf2;border-radius:18px;padding:10px 14px}
+.er .no{background:var(--mint);color:#fff;font-weight:900;font-size:24px;border-radius:14px;padding:4px 12px;min-width:76px;text-align:center}
+.er .to{font-size:19px;line-height:1.3}.er .to small{display:block;color:var(--soft);font-size:15px}
+.er .t{font-weight:900;font-size:24px;white-space:nowrap;text-align:right}.er .t.soon{color:#fff;background:var(--hot);border-radius:12px;padding:2px 10px}.er .t.off{color:var(--soft);font-size:17px}
+.homebtn{margin-left:auto;flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;width:72px;height:72px;border-radius:22px;border:3px solid #fff;background:#ffb547;color:#4a2a00;font-family:inherit;font-size:28px;line-height:1;cursor:pointer;box-shadow:0 4px 0 #e0902a}
+.homebtn span{font-size:17px;font-weight:900;margin-top:2px}
+.homebtn:active{transform:translateY(3px);box-shadow:none}
+#driver{position:fixed;inset:0;z-index:50;background:#fffdf7;color:#000;display:flex;flex-direction:column;justify-content:center;padding:6vw;gap:2vh}
+#driver[hidden]{display:none!important}
+#driver .dhint{font-size:clamp(22px,5vw,34px);margin:0}
+#driver .addr{font-size:clamp(36px,9vw,80px);font-weight:900;line-height:1.25;margin:0}
+#driver .addr span{font-size:.7em}
+#driver .btn{font-size:22px;min-height:66px}
+#offline{position:fixed;left:10px;right:10px;bottom:10px;z-index:40;background:#3d3030;color:#fff;border-radius:16px;padding:12px 16px;font-weight:700;font-size:18px;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+#offline[hidden]{display:none!important}
+.direct{border-radius:20px;background:var(--mint2);border:4px solid var(--mint);padding:12px 16px;margin:10px 0}
+.direct .no{display:inline-block;background:var(--mint);color:#fff;font-weight:900;font-size:24px;border-radius:12px;padding:0 12px;margin-right:6px}
+.direct .live{display:inline-block;margin-top:6px;font-weight:900;background:#fff;border-radius:999px;padding:2px 12px}
+.direct .live.soon{background:var(--hot);color:#fff}
+</style>
+</head>
+<body>
+<header>
+<div class="hd"><svg viewBox="0 0 86 64" aria-hidden="true">
+<g class="wheel"><rect x="8" y="16" width="62" height="36" rx="16" fill="#4a9fe0"/><rect x="8" y="40" width="62" height="12" rx="6" fill="#2f7fbf"/>
+<rect x="16" y="22" width="20" height="14" rx="6" fill="#fff"/><circle cx="50" cy="29" r="3" fill="#20466b"/><circle cx="62" cy="29" r="3" fill="#20466b"/>
+<circle cx="47" cy="36" r="3.5" fill="#ffb3bf"/><circle cx="66" cy="36" r="3.5" fill="#ffb3bf"/><path d="M52 35q4 4 8 0" stroke="#20466b" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+<rect x="52" y="9" width="9" height="10" rx="3" fill="#2f7fbf"/></g>
+<circle cx="22" cy="56" r="6" fill="#20466b"/><circle cx="56" cy="56" r="6" fill="#20466b"/><circle cx="22" cy="56" r="2" fill="#fff"/><circle cx="56" cy="56" r="2" fill="#fff"/>
+<path class="puff" d="M62 6c-2-3-6 0-3 3l3 3 3-3c3-3-1-6-3-3z" fill="#ff7a8a"/><path class="puff b" d="M68 2c-1.6-2.4-4.8 0-2.4 2.4l2.4 2.4 2.4-2.4c2.4-2.4-.8-4.8-2.4-2.4z" fill="#ff7a8a"/>
+</svg><h1>爺爺奶奶的土城小幫手<small>今天想去哪裡、吃什麼呀？</small></h1><button class="homebtn" id="homeBtn" type="button">🚕<span>回家</span></button></div>
+<div class="tabs" role="tablist">
+<button role="tab" id="tab-go" aria-selected="true" aria-controls="p-go">🚇 交通</button>
+<button role="tab" id="tab-food" aria-selected="false" aria-controls="p-food">🍜 美食</button>
+</div>
+</header>
+
+<div class="wrap">
+<!-- ================= 交通 ================= -->
+<div id="p-go" role="tabpanel">
+<section class="card">
+<label class="big" for="q">🌸 想去哪裡玩呀？打字或按下面的地方</label>
+<form class="search" id="f"><input id="q" type="search" placeholder="例如：台北101、淡水 🚃" autocomplete="off"><button class="btn hot" type="submit">查</button></form>
+<div class="chips" id="pop"></div>
+<div id="learned"></div>
+<div class="from"><span>從哪一站出發：</span><select id="start"></select></div>
+</section>
+<section class="card" id="live">
+<h2>🚏 家附近公車，還要幾分鐘？</h2>
+<div class="chips" id="stops"></div>
+<div id="eta"><p class="note">讀取中……</p></div>
+<p class="note" id="etaNote"></p>
+</section>
+<section class="card" id="res" hidden aria-live="polite"></section>
+</div>
+
+<!-- ================= 美食 ================= -->
+<div id="p-food" role="tabpanel" hidden>
+<section class="card">
+<h2>😋 家附近好吃的</h2>
+<p class="note">都在海山站、學府路、裕民路一帶。綠色「現在有開」是照手機時間自動算的。</p>
+<div class="chips" id="fcat"></div>
+</section>
+<div class="food" id="flist"></div>
+<p class="note">營業時間和價格可能會改變，出門前可以先按「地圖」看最新資訊。</p>
+</div>
+</div>
+
+<div id="driver" role="dialog" aria-modal="true" aria-label="給司機看的地址" hidden>
+<p class="dhint">司機您好，請載我到：</p>
+<p class="addr">新北市土城區<br>學府路一段98巷<br>30之1號<br><span>（學府之森）</span></p>
+<div class="dbtns"><a class="btn" id="navHome" href="#">🗺️ 我自己走回家（導航）</a><button class="btn hot" id="closeDriver" type="button">關閉</button></div>
+</div>
+<div id="offline" hidden>📵 現在沒有網路：公車時間、查新地方暫時不能用，其他都可以看。</div>
+<script>
+{
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const HOME='新北市土城區學府路一段98巷30之1號';
+const gdir=(d,m)=>`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(HOME)}&destination=${encodeURIComponent(d)}&travelmode=${m}`;
+const gsearch=q=>`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
+
+/* ---------- 回家：大字地址給司機看 ---------- */
+const drv=$('driver');
+$('homeBtn').addEventListener('click',()=>{drv.hidden=false;$('closeDriver').focus()});
+$('closeDriver').addEventListener('click',()=>{drv.hidden=true});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')drv.hidden=true});
+$('navHome').href=`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(HOME)}&travelmode=walking`;
+/* ---------- 沒網路時的提示 + 離線也能開 ---------- */
+const net=()=>{$('offline').hidden=navigator.onLine};
+addEventListener('online',()=>{net();loadBus&&loadBus()});addEventListener('offline',net);net();
+if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
+
+/* ---------- 分頁 ---------- */
+const tabs=[['tab-go','p-go'],['tab-food','p-food']];
+const show=id=>{tabs.forEach(([t,p])=>{const on=t===id;$(t).setAttribute('aria-selected',on);$(p).hidden=!on});try{localStorage.setItem('tab',id)}catch(e){}window.scrollTo(0,0)};
+tabs.forEach(([t])=>$(t).addEventListener('click',()=>show(t)));
+try{const t=localStorage.getItem('tab');if(t&&$(t))show(t)}catch(e){}
+
+/* ---------- 台北捷運路網 ---------- */
+const LINES=[
+ {n:'板南線',c:'#0070bd',s:'頂埔 永寧 土城 海山 亞東醫院 府中 板橋 新埔 江子翠 龍山寺 西門 台北車站 善導寺 忠孝新生 忠孝復興 忠孝敦化 國父紀念館 市政府 永春 後山埤 昆陽 南港 南港展覽館'},
+ {n:'淡水信義線',c:'#e3002c',s:'象山 台北101/世貿 信義安和 大安 大安森林公園 東門 中正紀念堂 台大醫院 台北車站 中山 雙連 民權西路 圓山 劍潭 士林 芝山 明德 石牌 唭哩岸 奇岩 北投 復興崗 忠義 關渡 竹圍 紅樹林 淡水'},
+ {n:'新北投支線',c:'#fd92a3',s:'北投 新北投'},
+ {n:'松山新店線',c:'#008659',s:'新店 新店區公所 七張 大坪林 景美 萬隆 公館 台電大樓 古亭 中正紀念堂 小南門 西門 北門 中山 松江南京 南京復興 台北小巨蛋 南京三民 松山'},
+ {n:'小碧潭支線',c:'#cfdb00',s:'七張 小碧潭'},
+ {n:'中和新蘆線',c:'#f8b61c',s:'南勢角 景安 永安市場 頂溪 古亭 東門 忠孝新生 松江南京 行天宮 中山國小 民權西路 大橋頭 三重國小 三和國中 徐匯中學 三民高中 蘆洲'},
+ {n:'中和新蘆線',c:'#f8b61c',s:'南勢角 景安 永安市場 頂溪 古亭 東門 忠孝新生 松江南京 行天宮 中山國小 民權西路 大橋頭 台北橋 菜寮 三重 先嗇宮 頭前庄 新莊 輔大 丹鳳 迴龍'},
+ {n:'文湖線',c:'#c48c31',s:'動物園 木柵 萬芳社區 萬芳醫院 辛亥 麟光 六張犁 科技大樓 大安 忠孝復興 南京復興 中山國中 松山機場 大直 劍南路 西湖 港墘 文德 內湖 大湖公園 葫洲 東湖 南港軟體園區 南港展覽館'},
+ {n:'環狀線',c:'#ffdb00',s:'大坪林 十四張 秀朗橋 景平 景安 中和 橋和 中原 板新 板橋 新埔民生 頭前庄 幸福 新北產業園區'},
+ {n:'機場捷運',c:'#8246af',s:'台北車站 三重 新北產業園區 新莊副都心 泰山 泰山貴和 體育大學 長庚醫院 林口 山鼻 坑口 機場第一航廈 機場第二航廈'}
+].map((l,i)=>({...l,id:i,st:l.s.split(' ')}));
+const ADJ={};
+LINES.forEach(l=>l.st.forEach((s,i)=>{ADJ[s]=ADJ[s]||[];if(i>0)ADJ[s].push([l.st[i-1],l.id]);if(i<l.st.length-1)ADJ[s].push([l.st[i+1],l.id])}));
+const ALL=Object.keys(ADJ);
+
+// 最少轉乘的路線（每站 1 分、每次轉車 6 分）
+function route(a,b){
+ const key=(s,ln)=>s+'|'+(ln==null?'':LINES[ln].n);
+ const dist={},prev={},Q=[[0,a,null]];dist[key(a,null)]=0;
+ while(Q.length){
+  Q.sort((x,y)=>x[0]-y[0]);const [d,s,ln]=Q.shift();
+  if(s===b){const path=[];let k=key(s,ln),cur=[s,ln];while(cur){path.unshift(cur);cur=prev[key(cur[0],cur[1])]}return path}
+  if(d>dist[key(s,ln)])continue;
+  for(const [t,l2] of ADJ[s]){const nd=d+1+(ln!=null&&LINES[ln].n!==LINES[l2].n?6:0);const k=key(t,l2);
+   if(dist[k]==null||nd<dist[k]){dist[k]=nd;prev[k]=[s,ln];Q.push([nd,t,l2])}}
+ }return null;
+}
+// 把路線整理成「坐哪條線、往哪個方向、坐幾站」
+function legs(path){
+ const out=[];
+ for(let i=1;i<path.length;i++){const [s,l]=path[i],from=path[i-1][0];const last=out[out.length-1];
+  if(last&&LINES[last.l].n===LINES[l].n){last.to=s;last.n++;last.lines.add(l)}else out.push({l,from,to:s,n:1,lines:new Set([l])})}
+ return out.map(g=>{
+  const name=LINES[g.l].n;const ends=new Set();
+  g.lines.forEach(id=>{const st=LINES[id].st;if(!st.includes(g.from)||!st.includes(g.to))return;ends.add(st.indexOf(g.to)>st.indexOf(g.from)?st[st.length-1]:st[0])});
+  // 中和新蘆線兩條分支共用的一段：兩個方向都可以坐
+  const trunk=LINES[5].st.slice(0,12);
+  if(name==='中和新蘆線'&&trunk.includes(g.from)&&trunk.includes(g.to)&&trunk.indexOf(g.to)>trunk.indexOf(g.from)){ends.clear();ends.add('蘆洲 或 迴龍')}
+  return{name,c:LINES[g.l].c,from:g.from,to:g.to,n:g.n,dir:[...ends][0]||''};
+ });
+}
+
+/* ---------- 地名 → 捷運站 ---------- */
+const PLACES={
+ '台北101':['台北101/世貿'],'101':['台北101/世貿'],'世貿':['台北101/世貿'],'信義商圈':['市政府','出站就是信義商圈，百貨公司很多。'],'象山':['象山','出站走到象山步道入口約 10 分鐘，山路有很多樓梯，量力而為。'],
+ '西門町':['西門','6 號出口出來就是西門町。'],'士林夜市':['劍潭','1 號出口過馬路就是士林夜市。'],'故宮':['士林','出站後換坐公車到故宮（站牌寫「故宮博物院」）。'],
+ '動物園':['動物園','出站就到動物園門口，園區很大可以坐園內遊園車。'],'貓空':['動物園','出站往貓空纜車站走約 5 分鐘，坐纜車上山。'],
+ '淡水老街':['淡水','出站往河邊走就是老街。'],'漁人碼頭':['淡水','出站坐紅26 公車或渡船到漁人碼頭。'],
+ '中正紀念堂':['中正紀念堂','5 號出口出來就是。'],'自由廣場':['中正紀念堂'],'總統府':['台大醫院'],'228公園':['台大醫院'],'二二八公園':['台大醫院'],
+ '龍山寺':['龍山寺','1 號出口出來就看到龍山寺。'],'國父紀念館':['國父紀念館'],'行天宮':['行天宮','4 號出口走一下就到。'],
+ '饒河夜市':['松山','5 號出口出來就是饒河夜市和慈祐宮。'],'寧夏夜市':['雙連','出站往民生西路走約 8 分鐘。'],'大稻埕':['北門','出站往迪化街方向走約 10 分鐘。'],'迪化街':['北門','出站往迪化街方向走約 10 分鐘。'],
+ '北投溫泉':['新北投','出站就是溫泉區和北投公園。'],'天母':['芝山','出站換公車到天母。'],'榮總':['石牌','出站有醫院接駁車到台北榮總。'],
+ '師大夜市':['台電大樓'],'公館夜市':['公館'],'台大':['公館'],'永康街':['東門','5 號出口出來就是永康街。'],'東區':['忠孝復興'],'SOGO':['忠孝復興'],'小巨蛋':['台北小巨蛋'],
+ '桃園機場':['機場第一航廈','在台北車站換機場捷運（紫色），要另外買票或刷卡，先問站務人員比較保險。'],'林口長庚':['長庚醫院'],'碧潭':['新店','出站往河邊走就是碧潭。'],
+ '環球購物中心':['中和'],'中和':['南勢角'],'永和':['頂溪'],'樂華夜市':['頂溪','出站走約 5 分鐘。'],'林家花園':['府中','出站走約 10 分鐘。'],'南雅夜市':['府中'],
+ '新板特區':['板橋'],'大遠百':['新埔'],'美麗華':['劍南路'],'花博':['圓山'],'陽明山':['劍潭','出站換坐「紅5」公車上陽明山。'],'大湖公園':['大湖公園'],'新莊老街':['新莊'],
+ '亞東醫院':['亞東醫院','出站就到醫院。'],'台北車站':['台北車站'],'板橋車站':['板橋'],
+ '土城醫院':['土城','從 1 號或 3 號出口出去，坐醫院的免費接駁車，約 10 分鐘（班次可能調整）。'],
+ '三峽':['頂埔','在頂埔站裡跟著牌子換「三鶯線」，往三峽方向坐，不用出站。'],'三峽老街':['頂埔','在頂埔站裡換「三鶯線」往三峽方向，不用出站。'],
+ '鶯歌':['頂埔','在頂埔站裡換「三鶯線」往鶯歌方向，坐到最後一站「鶯歌」附近；鶯歌老街還要走一段。'],'鶯歌老街':['頂埔','在頂埔站裡換「三鶯線」往鶯歌方向，不用出站。'],
+ '回家':['海山','從海山站走回家約 10～15 分鐘，累了就坐計程車。'],'家':['海山','從海山站走回家約 10～15 分鐘。']
+};
+// 有查證過的直達公車
+const BUS={
+ '西門':'在「捷運土城站」3 號出口旁坐 <b>706</b>（西門－三峽），往西門方向，不用轉車。',
+ '頂埔':'要去三峽也可以在「捷運土城站」1、2 號出口旁坐 <b>706</b>（西門－三峽）往三峽方向。',
+ '土城':'坐捷運最方便；公車可以在家附近問站牌。'
+};
+const POP=['台北101','西門町','台北車站','士林夜市','淡水老街','中正紀念堂','龍山寺','動物園','北投溫泉','板橋車站','三峽老街','鶯歌老街','土城醫院','亞東醫院','回家'];
+
+const sn=s=>s.endsWith('站')?s:s+'站';
+const norm=s=>s.replace(/\s/g,'').replace(/^(捷運|臺北|台北市)/,'').replace(/臺/g,'台').replace(/(捷運站|站)$/,'');
+function find(q){
+ const k=norm(q);if(!k)return null;
+ const L=learned()[q.trim()];if(L)return{dest:q.trim(),st:L.st,tip:L.tip,learned:true};
+ if(PLACES[k])return{dest:k,st:PLACES[k][0],tip:PLACES[k][1]};
+ if(ADJ[k])return{dest:sn(k),st:k};
+ for(const p in PLACES)if(k.includes(p)||(p.length>=2&&p.includes(k)))return{dest:p,st:PLACES[p][0],tip:PLACES[p][1]};
+ const s=ALL.find(s=>s.includes(k)||k.includes(s.replace('/世貿','')));
+ return s?{dest:sn(s),st:s}:{dest:q,st:null};
+}
+
+
+/* ---------- 站的位置（找最近的捷運站用） ---------- */
+const POS={};'南港展覽館,25.055288,121.6175001;南港軟體園區,25.0599419,121.6159291;東湖,25.0671258,121.6117183;葫洲,25.0724829,121.607389;大湖公園,25.083351,121.602658;內湖,25.0838996,121.5942576;文德,25.078436,121.585527;港墘,25.0801772,121.5756865;西湖,25.081906,121.567597;劍南路,25.0847974,121.5550972;大直,25.0796581,121.5468824;松山機場,25.063718,121.549643;中山國中,25.0607843,121.5439248;南京復興,25.0519749,121.544514;忠孝復興,25.0417843,121.5448626;大安,25.0331472,121.5438667;科技大樓,25.0261364,121.5436451;六張犁,25.02379,121.553126;麟光,25.0184814,121.5587292;辛亥,25.005483,121.557102;萬芳醫院,24.999335,121.558095;萬芳社區,24.99784,121.570705;木柵,24.998231,121.573147;動物園,24.9981707,121.5794981;松山,25.048889,121.577778;南京三民,25.051652,121.5625193;台北小巨蛋,25.0512968,121.5499054;松江南京,25.0526894,121.5327444;中山,25.052433,121.520518;北門,25.0495568,121.5079931;西門,25.0417459,121.508652;小南門,25.035277,121.510975;中正紀念堂,25.032406,121.518244;古亭,25.025473,121.523279;台電大樓,25.02072,121.527181;公館,25.014347,121.534412;萬隆,25.0025439,121.538552;景美,24.9921332,121.5405874;大坪林,24.9831,121.5418;七張,24.9750109,121.54322;小碧潭,24.9720931,121.5295777;新店區公所,24.967498,121.541192;新店,24.9578719,121.537557;南港,25.0518136,121.6060423;昆陽,25.050461,121.593268;後山埤,25.045248,121.582961;永春,25.041007,121.576419;市政府,25.0409916,121.5651802;國父紀念館,25.0410987,121.5579885;忠孝敦化,25.0413218,121.5516538;忠孝新生,25.042023,121.533107;善導寺,25.044746,121.523133;台北車站,25.046374,121.517896;龍山寺,25.0354487,121.4995792;江子翠,25.0296499,121.472311;新埔,25.0242359,121.468174;板橋,25.014579,121.4625101;府中,25.0085549,121.459183;亞東醫院,24.9975632,121.4524089;海山,24.985339,121.448786;土城,24.973183,121.444156;永寧,24.9666709,121.4366324;頂埔,24.9588815,121.4178224;象山,25.0329,121.5707;台北101/世貿,25.0331,121.5630;信義安和,25.0334,121.5528;大安森林公園,25.0335,121.5359;東門,25.0339,121.5287;台大醫院,25.041003,121.515715;雙連,25.057805,121.520627;民權西路,25.062879,121.519346;圓山,25.0708435,121.5200551;劍潭,25.084873,121.525078;士林,25.093535,121.52623;芝山,25.1030599,121.522514;明德,25.109721,121.518848;石牌,25.115078,121.515136;唭哩岸,25.120872,121.506252;奇岩,25.126605,121.500889;北投,25.131977,121.498695;新北投,25.136947,121.502534;復興崗,25.137532,121.485424;忠義,25.131058,121.473226;關渡,25.12571,121.467188;竹圍,25.133598,121.4592857;紅樹林,25.154693,121.458791;淡水,25.167935,121.445459;南勢角,24.989714,121.509767;景安,24.9937133,121.5048071;永安市場,25.0023175,121.5110392;頂溪,25.0128479,121.515416;行天宮,25.0604614,121.53282;中山國小,25.0627591,121.5271317;大橋頭,25.0631761,121.5131091;台北橋,25.063048,121.500932;菜寮,25.0594539,121.491432;三重,25.0552855,121.4841009;先嗇宮,25.0465799,121.47129;頭前庄,25.0397749,121.4607719;新莊,25.0362597,121.4524832;輔大,25.032913,121.4353916;丹鳳,25.0289,121.4226;迴龍,25.0218,121.4115;三重國小,25.0707449,121.4965;三和國中,25.077349,121.48749;徐匯中學,25.08035,121.479925;三民高中,25.0856209,121.4729395;蘆洲,25.0915536,121.4644714;十四張,24.9858,121.5285;秀朗橋,24.9905,121.5211;景平,24.9922,121.5106;中和,24.9995,121.4860;橋和,25.0056,121.4808;中原,25.0088,121.4842;板新,25.0145,121.4729;新埔民生,25.0261,121.4673;幸福,25.0500,121.4597;新北產業園區,25.0613,121.4598;新莊副都心,25.0597,121.4504;泰山,25.0547,121.4319;泰山貴和,25.0587,121.4106;體育大學,25.0749,121.3807;長庚醫院,25.0612,121.3660;林口,25.0617,121.3590;山鼻,25.0756,121.2683;坑口,25.0841,121.2392;機場第一航廈,25.0814,121.2378;機場第二航廈,25.0774,121.2310'.split(';').forEach(x=>{const [n,a,b]=x.split(',');POS[n]=[+a,+b]});
+const km=(a,b,c,d)=>{const r=Math.PI/180,x=(d-b)*r*Math.cos((a+c)/2*r),y=(c-a)*r;return 6371*Math.hypot(x,y)};
+const nearestSt=(lat,lon)=>Object.entries(POS).map(([n,p])=>({n,d:km(lat,lon,p[0],p[1])})).sort((x,y)=>x.d-y.d)[0];
+/* ---------- 查不到的地方：上網找，找到就記在手機裡 ---------- */
+const LKEY='learnedPlaces';
+const learned=()=>{try{return JSON.parse(localStorage.getItem(LKEY)||'{}')}catch(e){return{}}};
+const remember=(q,v)=>{try{const m=learned();m[q]=v;localStorage.setItem(LKEY,JSON.stringify(m))}catch(e){}};
+async function lookup(q){
+ const near='&viewbox=121.2,25.3,121.8,24.85';
+ const tries=[
+  async()=>{const r=await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=tw&accept-language=zh-TW'+near+'&q='+encodeURIComponent(q));const j=await r.json();return j[0]&&{lat:+j[0].lat,lon:+j[0].lon,name:j[0].name||q,addr:j[0].display_name}},
+  async()=>{const r=await fetch('https://photon.komoot.io/api/?limit=1&lat=25.03&lon=121.52&q='+encodeURIComponent(q));const j=await r.json();const f=j.features&&j.features[0];return f&&{lat:f.geometry.coordinates[1],lon:f.geometry.coordinates[0],name:f.properties.name||q,addr:[f.properties.city,f.properties.district,f.properties.street].filter(Boolean).join(' ')}}
+ ];
+ for(const t of tries){try{const v=await t();if(v&&km(v.lat,v.lon,25.03,121.52)<120)return v}catch(e){}}
+ return null;
+}
+function drawLearned(){
+ const m=learned(),ks=Object.keys(m);
+ $('learned').innerHTML=ks.length?'<p class="note" style="margin:14px 0 0">📌 之前查過的地方（記在這支手機裡）：</p><div class="chips">'+ks.map(k=>`<button type="button" data-q="${esc(k)}">${esc(k)}</button>`).join('')+'</div>':'';
+}
+$('learned').addEventListener('click',e=>{const b=e.target.closest('button');if(b){$('q').value=b.dataset.q;go()}});
+
+$('start').innerHTML=['海山','土城','永寧','頂埔','亞東醫院','板橋'].map(s=>`<option ${s==='海山'?'selected':''}>${s}</option>`).join('');
+$('pop').innerHTML=POP.map(p=>`<button type="button" data-q="${esc(p)}">${esc(p)}</button>`).join('');
+drawLearned();
+$('pop').addEventListener('click',e=>{const b=e.target.closest('button');if(b){$('q').value=b.dataset.q;go()}});
+$('f').addEventListener('submit',e=>{e.preventDefault();go()});
+$('start').addEventListener('change',()=>{if($('q').value)go()});
+
+let speakText='';
+async function go(){
+ const q=$('q').value.trim();if(!q)return;
+ stop();const start=$('start').value,box=$('res');let r=find(q);
+ if(!r.st){
+  box.innerHTML=`<h2>去 ${esc(q)}</h2><p class="sum">🔎 我上網幫你找「${esc(q)}」在哪裡，等我一下下……</p>`;box.hidden=false;box.scrollIntoView({behavior:'smooth',block:'start'});
+  const g=await lookup(q);
+  if(g){const n=nearestSt(g.lat,g.lon),walkMin=Math.max(1,Math.round(n.d*1000/60));
+   const tip=n.d>1.5?`「${q}」離「${sn(n.n)}」大約 ${n.d.toFixed(1)} 公里，有點遠，出站後建議坐計程車，或按下面的綠色按鈕查公車。`:`出站後走到「${q}」大約 ${walkMin} 分鐘（${Math.round(n.d*1000)} 公尺）。`;
+   r={dest:q,st:n.n,tip,found:g};remember(q,{st:n.n,tip,lat:g.lat,lon:g.lon,addr:g.addr||''});drawLearned();
+  }
+ }
+ let h=`<h2>去 ${esc(r.dest)}</h2>`+(r.found?`<p class="note">✅ 找到了！${esc(r.found.addr||'')}　已經記起來，下次查會更快。</p>`:'');speakText=`去${r.dest}。`;
+ // ---- 捷運 ----
+ h+='<h3>🚇 捷運怎麼坐</h3>';
+ if(!r.st){h+=`<p>網路上也找不到「${esc(q)}」，可能是名字不一樣，換個說法試試看（例如加上路名或「台北」），或按下面的綠色按鈕用 Google 地圖查。</p>`}
+ else if(r.st===start){h+=`<p class="sum">就在「${esc(sn(start))}」，不用坐捷運！</p>`;if(r.tip)h+=`<div class="walk">👣 ${esc(r.tip)}</div>`;speakText+=`就在${start}站。${r.tip||''}`}
+ else{
+  const L=legs(route(start,r.st)),stops=L.reduce((a,g)=>a+g.n,0),mins=Math.round(stops*2.2+(L.length-1)*6);
+  h+=`<p class="sum">大約 ${mins} 分鐘，${L.length>1?`要換 ${L.length-1} 次車`:'不用換車'}。</p>`;
+  if(start==='海山')h+='<div class="walk">👣 從家走到「海山站」（約 10～15 分鐘）。進站刷敬老卡。</div>';
+  speakText+=`大約${mins}分鐘。`;
+  L.forEach((g,i)=>{
+   if(i>0){h+=`<div class="xfer">🔁 在「${esc(sn(g.from))}」下車，換 ${esc(g.name)}（跟著牌子走，不用出站）</div>`;speakText+=`在${sn(g.from)}下車，換${g.name}。`}
+   h+=`<div class="leg" style="--c:${g.c}"><span class="ln">${esc(g.name)}</span><div class="dir">坐「往 ${esc(g.dir)}」方向</div><div class="n">坐 <b>${g.n}</b> 站，到「${esc(sn(g.to))}」下車</div></div>`;
+   speakText+=`第${i+1}段，坐${g.name}，往${g.dir}方向，坐${g.n}站，到${sn(g.to)}下車。`;
+  });
+  if(r.tip){h+=`<div class="walk">👣 ${esc(r.tip)}</div>`;speakText+=r.tip}
+ }
+ // ---- 公車 ----
+ h+='<h3 style="margin-top:18px">🚌 公車怎麼坐</h3>';
+ const dpos=r.found?[r.found.lat,r.found.lon]:(learned()[q]&&learned()[q].lat?[learned()[q].lat,learned()[q].lon]:(r.st&&POS[r.st]));
+ const direct=(r.dest==='回家'||r.dest==='家')?[]:await directBus(dpos);
+ if(direct.length){
+  h+='<p class="sum">🎉 家門口就有公車直達，不用轉車！</p>';
+  direct.forEach(d=>{const [t,c]=etaText(d.sec);
+   h+=`<div class="direct"><span class="no">${esc(d.route)}</span>在「${esc(d.stop)}」站牌坐「往 ${esc(d.to)}」方向<br>坐 <b>${d.n}</b> 站（大約 ${Math.round(d.n*1.6/5)*5||5} 分鐘），到「${esc(d.alight)}」下車${d.walk>80?`，再走約 ${Math.max(1,Math.round(d.walk/60))} 分鐘`:''}<br><span class="live ${c}">⏱️ 現在：${esc(t)}</span></div>`;
+   speakText+=`公車也可以。在${d.stop}站牌坐${d.route}，往${d.to}方向，坐${d.n}站，到${d.alight}下車。現在${t}。`;
+  });
+  h+='<p class="note">「現在」是公車多久會到站牌，打開時抓的即時資料。</p>';
+ }
+ const bus=r.st&&BUS[r.st];
+ if(bus){h+=`<div class="bus">${bus}</div>`}
+ h+=`<div class="bus">${direct.length?'想看其他公車走法，':''}按下面綠色按鈕，地圖會列出<b>幾號公車、在哪一站坐、幾分鐘後來</b>，照著坐就好。上下車都刷敬老卡（公車半價再扣點數）。</div>`;
+ h+=`<a class="btn" style="background:var(--ok)" href="${gdir(r.dest==='回家'||r.dest==='家'?HOME:r.dest,'transit')}">🗺️ 看公車怎麼坐（開地圖）</a>`;
+ h+=`<button class="btn hot" type="button" id="say">🔊 唸給我聽</button>`;
+ box.innerHTML=h;box.hidden=false;box.scrollIntoView({behavior:'smooth',block:'start'});
+ $('say').addEventListener('click',e=>speak(speakText,e.currentTarget));
+}
+
+/* ---------- 唸出來：Google 小姐 ---------- */
+// 整理成好唸的句子
+const clean=t=>t.replace(/\//g,'').replace(/～/g,'到').replace(/[^\p{L}\p{N}，。、！？：（）「」\s]/gu,'').replace(/[（）「」]/g,'，').replace(/，+/g,'，').replace(/\s+/g,'');
+// 每段不超過 150 字（Google 一次只能唸一小段）
+const chunks=t=>{const out=[];let cur='';for(const part of clean(t).split(/(?<=[。！？])/)){if(!part)continue;if((cur+part).length>150){if(cur)out.push(cur);cur=''}
+ if(part.length>150){part.split(/(?<=，)/).forEach(x=>{if((cur+x).length>150){out.push(cur);cur=''}cur+=x})}else cur+=part}if(cur)out.push(cur);return out};
+const audio=new Audio();let queue=[],playing=false,sayBtn=null;
+const gurl=t=>'https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=zh-TW&ttsspeed=0.9&q='+encodeURIComponent(t);
+const setBtn=on=>{playing=on;if(sayBtn)sayBtn.textContent=on?'⏹️ 停止':'🔊 唸給我聽'};
+function stop(){queue=[];audio.pause();if('speechSynthesis' in window)speechSynthesis.cancel();setBtn(false)}
+function next(){if(!queue.length){setBtn(false);return}const t=queue.shift();audio.src=gurl(t);audio.play().catch(()=>{queue.unshift(t);fallback()})}
+audio.addEventListener('ended',next);
+audio.addEventListener('error',()=>{if(playing)fallback(audio.src?decodeURIComponent(audio.src.split('&q=')[1]||''):'')});
+// 備用：手機內建語音（優先挑 Google 的中文聲音）
+let voice=null;const pick=()=>{const vs=speechSynthesis.getVoices(),zh=vs.filter(v=>/zh[-_](TW|Hant)/i.test(v.lang)||/國語|臺灣|台灣/.test(v.name));voice=zh.find(v=>/google/i.test(v.name))||zh.find(v=>/美佳|Mei-?Jia|Meijia/i.test(v.name))||zh[0]||vs.find(v=>/^zh/i.test(v.lang))||null};
+if('speechSynthesis' in window){pick();speechSynthesis.onvoiceschanged=pick}
+function fallback(first){
+ if(!('speechSynthesis' in window)){setBtn(false);return}
+ const rest=(first?[first]:[]).concat(queue);queue=[];speechSynthesis.cancel();
+ rest.forEach((t,i)=>{const u=new SpeechSynthesisUtterance(t);u.lang='zh-TW';u.rate=.95;if(voice)u.voice=voice;if(i===rest.length-1)u.onend=()=>setBtn(false);speechSynthesis.speak(u)});
+}
+function speak(t,btn){if(playing){stop();return}sayBtn=btn||null;queue=chunks(t);if(!queue.length)return;setBtn(true);next()}
+
+
+/* ---------- 公車即時到站：直接抓新北市、台北市公車動態資訊中心的即時檔案（約每分鐘更新） ---------- */
+const STOPS_URL='https://raw.githubusercontent.com/coolalxeanderyi/Map/data/stops.json';
+const ETA_URL={ntpc:'https://tcgbusfs.blob.core.windows.net/ntpcbus/GetEstimateTime.gz',tpe:'https://tcgbusfs.blob.core.windows.net/blobbus/GetEstimateTime.gz'};
+const ORDER=['廣福國小','廣福里'];
+let stopsInfo=null,etaMap={},etaTime=null,curStop=null,etaFail=false;
+async function gunzipJSON(url){
+ const r=await fetch(url+'?t='+Date.now(),{cache:'no-store'});if(!r.ok)throw new Error(r.status);
+ const buf=new Uint8Array(await r.arrayBuffer());
+ let txt;
+ if(buf[0]===0x1f&&buf[1]===0x8b){
+  if('DecompressionStream' in window){txt=await new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream('gzip'))).text()}
+  else{if(!window.pako)await new Promise((ok,no)=>{const sc=document.createElement('script');sc.src='https://unpkg.com/pako@2.1.0/dist/pako_inflate.min.js';sc.onload=ok;sc.onerror=no;document.head.appendChild(sc)});txt=window.pako.inflate(buf,{to:'string'})}
+ }else txt=new TextDecoder().decode(buf);
+ return JSON.parse(txt.replace(/^﻿/,''));
+}
+async function loadStops(){
+ try{const c=JSON.parse(localStorage.getItem('stopsInfo2')||'null');if(c&&Date.now()-c.at<864e5){stopsInfo=c.d;return}}catch(e){}
+ const r=await fetch(STOPS_URL+'?d='+new Date().toISOString().slice(0,10));stopsInfo=await r.json();
+ try{localStorage.setItem('stopsInfo2',JSON.stringify({at:Date.now(),d:stopsInfo}))}catch(e){}
+}
+function etaText(sec){
+ if(sec==null||isNaN(sec))return['沒有資料','off'];
+ if(sec===-1)return['還沒發車','off'];if(sec===-2)return['這站不停','off'];if(sec===-3)return['末班車走了','off'];if(sec===-4)return['今天沒開','off'];if(sec<0)return['沒有資料','off'];
+ const m=Math.floor(sec/60);
+ return m<=1?['快到了！','soon']:[`${m} 分鐘`,m<=4?'soon':''];
+}
+function drawEta(){
+ if(!stopsInfo)return;
+ const names=ORDER.filter(n=>stopsInfo.stops[n]);
+ if(!names.length){$('eta').innerHTML='<p>找不到站牌資料。</p>';return}
+ if(!curStop||!names.includes(curStop))curStop=names[0];
+ $('stops').innerHTML=names.map(n=>`<button type="button" aria-pressed="${n===curStop}" data-s="${esc(n)}">${esc(n)}</button>`).join('');
+ const age=etaTime?Math.max(0,(Date.now()-etaTime)/1000):0;
+ const rows=stopsInfo.stops[curStop].map(x=>{const v=etaMap[x.src+'|'+x.sid];let sec=v==null?null:+v;if(sec>0)sec=Math.max(0,sec-age);return{...x,sec}})
+  .sort((a,b)=>{const k=x=>x.sec==null||x.sec<0?1e9-(x.sec||0):x.sec;return k(a)-k(b)});
+ $('eta').innerHTML='<div class="eta">'+rows.map(r=>{const [t,c]=etaText(r.sec);return`<div class="er"><span class="no">${esc(r.route)}</span><span class="to">往 ${esc(r.to||'—')}</span><span class="t ${c}">${esc(t)}</span></div>`}).join('')+'</div>';
+ const tm=etaTime?new Date(etaTime).toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'}):'';
+ $('etaNote').textContent=etaFail?'⚠️ 即時資料暫時讀不到，下面是上一次的資料。':`即時資料（新北市、台北市公車動態資訊中心），${tm} 更新，每 30 秒自動重新整理。`;
+}
+async function loadBus(){
+ try{
+  if(!stopsInfo)await loadStops();
+  const res=await Promise.allSettled(Object.entries(ETA_URL).map(async([src,u])=>[src,await gunzipJSON(u)]));
+  const ok=res.filter(r=>r.status==='fulfilled').map(r=>r.value);
+  if(!ok.length)throw new Error('eta');
+  const want=new Set();Object.values(stopsInfo.stops).flat().forEach(x=>want.add(x.src+'|'+x.sid));
+  const m={};let t=0;
+  ok.forEach(([src,d])=>{
+   const up=d.EssentialInfo&&d.EssentialInfo.UpdateTime;if(up){const ms=Date.parse(up.replace(/\//g,'-').replace(' ','T')+'+08:00');if(ms>t)t=ms}
+   (d.BusInfo||[]).forEach(b=>{const k=src+'|'+b.StopID;if(want.has(k))m[k]=b.EstimateTime})
+  });
+  etaMap=m;etaTime=t||Date.now();etaFail=false;drawEta();
+ }catch(e){etaFail=true;if(stopsInfo)drawEta();else $('eta').innerHTML='<p>公車資料暫時讀不到，可以先按下面的「看公車怎麼坐」用地圖查。</p>'}
+}
+// 家門口（廣福國小、廣福里）的公車，有沒有經過目的地附近？
+async function directBus(dpos){
+ if(!dpos)return[];
+ try{if(!stopsInfo)await loadStops();if(!Object.keys(etaMap).length)await loadBus()}catch(e){}
+ if(!stopsInfo||!stopsInfo.lines)return[];
+ const best={};
+ for(const [stop,list] of Object.entries(stopsInfo.stops))for(const x of list){
+  const line=stopsInfo.lines[x.src+'|'+x.rid+'|'+x.gb];if(!line)continue;
+  const i=line.findIndex(z=>z[0]===stop);if(i<0)continue;
+  for(let j=i+1;j<line.length;j++){const [n,la,lo]=line[j];if(la==null)continue;
+   const d=km(dpos[0],dpos[1],la,lo)*1000;if(d>700)continue;
+   const v=etaMap[x.src+'|'+x.sid];let sec=v==null?null:+v;if(sec>0&&etaTime)sec=Math.max(0,sec-(Date.now()-etaTime)/1000);
+   const c={route:x.route,to:x.to,stop,alight:n,n:j-i,walk:Math.round(d),sec};
+   const k=x.route+'|'+x.to,o=best[k];
+   if(!o||c.walk+c.n*60<o.walk+o.n*60)best[k]=c;
+  }
+ }
+ return Object.values(best).sort((a,b)=>(a.walk+a.n*60)-(b.walk+b.n*60)).slice(0,3);
+}
+$('stops').addEventListener('click',e=>{const b=e.target.closest('button');if(b){curStop=b.dataset.s;drawEta()}});
+loadBus();setInterval(()=>{if(!document.hidden)loadBus()},30000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)loadBus()});
+
+/* ---------- 美食 ---------- */
+// 美食資料放在 food.json（可以用 admin.html 後台修改）
+let FOOD=[],FCATS=['早餐','麵飯','小吃','甜點'];
+const parseH=h=>(h||'').split(/[,，、]/).map(x=>x.trim()).filter(Boolean).map(r=>r.split(/[-~～]/).map(t=>{const [H,M]=t.trim().split(/[:：]/);return +H+(+M||0)/60})).filter(r=>r.length===2&&r.every(x=>!isNaN(x)));
+const CATS=()=>['全部','現在有開',...FCATS];
+let fc='全部';
+const now=()=>{const d=new Date();return{day:d.getDay(),t:d.getHours()+d.getMinutes()/60}};
+const status=f=>{const H=parseH(f.h);if(!H.length)return null;const {day,t}=now();if((f.off||[]).includes(day))return false;return H.some(([a,b])=>t>=a&&t<b)};
+const fmt=x=>`${Math.floor(x)}:${String(Math.round(x%1*60)).padStart(2,'0')}`;
+const hours=f=>{const w='日一二三四五六',H=parseH(f.h);let s=H.length?H.map(([a,b])=>fmt(a)+'～'+fmt(b)).join('、'):'營業時間不確定';if((f.off||[]).length)s+=`（星期${f.off.map(d=>w[d]).join('、')}休息）`;return s};
+function drawFood(){
+ $('fcat').innerHTML=CATS().map(c=>`<button type="button" aria-pressed="${c===fc}" data-c="${c}">${c==='現在有開'?'🟢 ':''}${c}</button>`).join('');
+ const list=FOOD.filter(f=>fc==='全部'||(fc==='現在有開'?status(f)===true:f.c===fc));
+ $('flist').innerHTML=list.length?list.map(f=>{const st=status(f);return`<article class="fc">
+  <div class="top"><h3>${esc(f.n)}</h3><span class="tag ${esc(f.c)}">${esc(f.c)}</span></div>
+  <p class="eat">🍽️ ${esc(f.eat)}${f.price?` <b>${esc(f.price)}</b>`:''}</p>
+  <p class="meta">${st===true?'<span class="open">● 現在有開</span>　':st===false?'<span class="closed">● 現在沒開</span>　':''}🕐 ${esc(hours(f))}</p>
+  <p class="meta">📍 土城區${esc(f.a)}${f.t?'　☎ '+esc(f.t):''}</p>
+  ${f.why?`<p class="meta">💬 ${esc(f.why)}</p>`:''}
+  <div class="acts"><a class="btn" href="${gsearch('土城 '+f.n.replace(/（.*）/,''))}">🗺️ 地圖</a><a class="btn ghost" href="${gdir('新北市土城區'+f.a,'walking')}">🚶 從家走過去</a></div>
+ </article>`}).join(''):'<section class="card"><p>現在這個時間沒有店開著，晚一點再看看！</p></section>';
+}
+$('fcat').addEventListener('click',e=>{const b=e.target.closest('button');if(b){fc=b.dataset.c;drawFood()}});
+fetch('food.json?t='+Date.now(),{cache:'no-store'}).then(r=>r.json()).then(d=>{FOOD=d.items||[];if(d.categories&&d.categories.length)FCATS=d.categories;drawFood()}).catch(()=>{$('flist').innerHTML='<section class="card"><p>美食清單暫時讀不到，晚一點再看看。</p></section>'});
+}
+</script>
+</body>
+</html>
