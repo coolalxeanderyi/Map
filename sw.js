@@ -1,5 +1,5 @@
 // 離線也能打開：網頁本身、美食清單、站牌清單會存一份在手機裡；即時公車一定要有網路。
-const CACHE='tucheng-v2';
+const CACHE='tucheng-v3';
 const CORE=['./','index.html','food.json','manifest.json','icon.svg','icon-180.png','icon-192.png','icon-512.png'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});

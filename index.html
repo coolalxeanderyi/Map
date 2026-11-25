@@ -129,6 +129,15 @@ label.big{display:block;font-size:23px;font-weight:900;margin-bottom:10px}
 .dishes li:last-child{border-bottom:0}.dishes b{color:#e0566a;white-space:nowrap}
 .total{font-size:20px;font-weight:900;background:#e6f3ff;border-radius:18px;padding:10px 14px;margin:8px 0 12px;line-height:1.45}
 .total b{color:#e0566a;font-size:26px}
+.gohome{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;margin-top:14px;min-height:92px;border:0;border-radius:26px;background:linear-gradient(135deg,#4cc49a,#3cb07f);color:#fff;font-family:inherit;font-size:30px;font-weight:900;cursor:pointer;box-shadow:0 6px 0 #2a8a60;line-height:1.25}
+.gohome small{font-size:16px;font-weight:700;opacity:.95}
+.gohome:active{transform:translateY(4px);box-shadow:none}
+.opt{border-radius:22px;border:4px solid var(--line);padding:12px 16px;margin:12px 0;background:#fff}
+.opt.best{border-color:var(--mint);background:var(--mint2)}
+.opt h3{margin:0 0 6px;font-size:23px}
+.opt .badge{display:inline-block;background:var(--mint);color:#fff;border-radius:999px;padding:0 12px;font-size:16px;margin-left:6px;vertical-align:middle}
+.opt .big{font-size:21px;line-height:1.5}
+.opt .big b{color:#e0566a}
 </style>
 </head>
 <body>
@@ -155,6 +164,8 @@ label.big{display:block;font-size:23px;font-weight:900;margin-bottom:10px}
 <div class="famRow" id="famRow"></div>
 <!-- ================= 交通 ================= -->
 <div id="p-go" role="tabpanel">
+<button class="gohome" id="goHomeBtn" type="button">🚌 公交回家<small>自動找你在哪，告訴你怎麼坐車回家</small></button>
+<section class="card" id="homeRes" hidden aria-live="polite"></section>
 <section class="card">
 <label class="big" for="q">🌸 想去哪裡玩呀？打字或按下面的地方</label>
 <form class="search" id="f"><input id="q" type="search" placeholder="例如：淡水 🚃" autocomplete="off"><button class="btn hot" type="submit">查</button></form>
@@ -187,7 +198,7 @@ label.big{display:block;font-size:23px;font-weight:900;margin-bottom:10px}
 <div id="driver" role="dialog" aria-modal="true" aria-label="給司機看的地址" hidden>
 <p class="dhint">司機您好，請載我到：</p>
 <p class="addr" id="drvAddr"></p>
-<div class="dbtns"><a class="btn" id="navHome" href="#">🗺️ 我自己走回家（導航）</a><button class="btn ghost" id="drvSet" type="button" hidden>⚙️ 設定地址</button><button class="btn hot" id="closeDriver" type="button">關閉</button></div>
+<div class="dbtns"><a class="btn" id="navHome" href="#">🗺️ 我自己走回家（導航）</a><button class="btn ghost" id="drvSet" type="button" hidden>⚙️ 設定地址</button><button class="btn" id="drvBus" type="button" style="background:var(--mint)">🚌 公交回家</button><button class="btn hot" id="closeDriver" type="button">關閉</button></div>
 </div>
 <div id="toast" role="status"></div>
 <div class="sheet" id="setup" role="dialog" aria-modal="true" aria-labelledby="setupT" hidden><div class="sheetIn">
@@ -558,6 +569,76 @@ function fallback(first){
 function speak(t,btn){if(playing){stop();return}sayBtn=btn||null;queue=chunks(t);if(!queue.length)return;setBtn(true);next()}
 
 
+/* ---------- 🚌 公交回家：抓現在位置，排出坐公車／坐捷運回家的方法 ---------- */
+const HOME_STOPS=['廣福國小','廣福里'];
+const secNow=(src,sid)=>{const v=etaMap[src+'|'+sid];let s=v==null?null:+v;if(s>0&&etaTime)s=Math.max(0,s-(Date.now()-etaTime)/1000);return s};
+const homeNear=()=>{for(const arr of Object.values(stopsInfo&&stopsInfo.lines||{})){const z=arr.find(z=>z[0]==='廣福國小'&&z[1]!=null);if(z)return[z[1],z[2]]}return POS['海山']};
+const mm=m=>m>=1000?(m/1000).toFixed(1)+' 公里':Math.round(m)+' 公尺';
+let homeSpeak='';
+async function goHome(){
+ const box=$('homeRes');stop();
+ box.hidden=false;box.innerHTML='<h2>🚌 公交回家</h2><p class="sum">📍 正在找你現在在哪裡，等我一下下……</p>';box.scrollIntoView({behavior:'smooth',block:'start'});
+ if(!navigator.geolocation){box.innerHTML='<h2>🚌 公交回家</h2><p>這支手機沒辦法定位，請按右上角「回家」坐計程車，或問路人。</p>';return}
+ navigator.geolocation.getCurrentPosition(p=>planHome(p.coords.latitude,p.coords.longitude),()=>{
+  box.innerHTML='<h2>🚌 公交回家</h2><p class="sum">找不到你的位置 😢</p><p>請到手機的「設定」打開「定位」，再按一次上面的綠色按鈕。也可以按右上角「回家」，把地址給計程車司機看。</p>';
+ },{enableHighAccuracy:true,timeout:15000,maximumAge:30000});
+}
+async function planHome(lat,lon){
+ const box=$('homeRes');
+ try{if(!stopsInfo)await loadStops();await loadBus()}catch(e){}
+ const hn=homeNear(),dHome=km(lat,lon,hn[0],hn[1])*1000,opts=[];
+ // 1) 就在附近：走路
+ if(dHome<900)opts.push({kind:'walk',mins:Math.round(dHome/60)+3,html:`走路回家就好，大約 <b>${Math.round(dHome/60)+3}</b> 分鐘（${mm(dHome)}）。`,say:`你離家很近，走路回家大約${Math.round(dHome/60)+3}分鐘。`});
+ // 2) 坐公車：附近有沒有回到廣福國小／廣福里的公車
+ const best={};
+ if(stopsInfo&&stopsInfo.lines)for(const [key,line] of Object.entries(stopsInfo.lines)){
+  const [src,rid,gb]=key.split('|');const hi=line.findIndex(z=>HOME_STOPS.includes(z[0]));if(hi<=0)continue;
+  const info=Object.values(stopsInfo.stops).flat().find(x=>x.src===src&&x.rid===rid&&x.gb===gb);if(!info)continue;
+  for(let j=0;j<hi;j++){const z=line[j];if(z[1]==null)continue;const d=km(lat,lon,z[1],z[2])*1000;if(d>600)continue;
+   const sec=z[3]?secNow(src,z[3]):null;if(sec!=null&&sec<-1)continue;// 今天沒開／末班走了
+   const n=hi-j,wait=sec!=null&&sec>=0?sec/60:12,mins=Math.round(d/60+wait+n*1.6+3);
+   const k=info.route+'|'+info.to;if(!best[k]||mins<best[k].mins)best[k]={kind:'bus',mins,route:info.route,to:info.to,board:z[0],walk:d,n,sec,alight:line[hi][0],alat:line[hi][1],alon:line[hi][2]};
+  }
+ }
+ Object.values(best).forEach(b=>{const [t,c]=etaText(b.sec);
+  b.html=`走 ${Math.max(1,Math.round(b.walk/60))} 分鐘到「<b>${esc(b.board)}</b>」站牌，坐 <span class="no" style="background:var(--mint);color:#fff;border-radius:10px;padding:0 10px;font-weight:900">${esc(b.route)}</span>（往 ${esc(b.to)}），坐 <b>${b.n}</b> 站到「${esc(b.alight)}」下車，就到家門口了。<br><span class="live ${c}" style="display:inline-block;margin-top:6px;font-weight:900;background:${c==='soon'?'var(--hot)':'#fff'};color:${c==='soon'?'#fff':'inherit'};border-radius:999px;padding:2px 12px">⏱️ 公車：${esc(t)}</span><br><button class="remind" type="button" data-la="${b.alat}" data-lo="${b.alon}" data-name="${esc(b.alight)}">🔔 上車後按這裡：快到家時叫我</button>`;
+  b.say=`坐公車：走到${b.board}站牌，坐${b.route}，坐${b.n}站到${b.alight}下車。公車${t}。`;opts.push(b)});
+ // 3) 坐捷運回海山站
+ const ns=nearestSt(lat,lon);
+ if(ns&&dHome>=900){
+  const walkTo=Math.max(1,Math.round(ns.d*1000/60));
+  if(ns.n==='海山'){opts.push({kind:'mrt',mins:walkTo+12,html:`你在海山站附近，直接走回家大約 <b>${walkTo+12}</b> 分鐘。`,say:'你在海山站附近，走回家就好。'})}
+  else{
+   const L=legs(route(ns.n,'海山')),ride=Math.round(L.reduce((a,g)=>a+g.n,0)*2.2),xf=L.slice(1).reduce((a,g,i)=>a+xferInfo(g.from,L[i].name,g.name).cost,0);
+   const mins=walkTo+4+ride+xf+12;
+   let h=`走 ${walkTo} 分鐘到「<b>${esc(sn(ns.n))}</b>」${ns.d>1.5?'（有點遠，可以先坐計程車到捷運站）':''}`;let say=`坐捷運：走到${sn(ns.n)}，`;
+   L.forEach((g,i)=>{if(i>0){const x=xferInfo(g.from,L[i-1].name,g.name);h+=`<br>🔁 在「${esc(sn(g.from))}」換 ${esc(g.name)}${x.out?'（要刷卡出閘門再進站）':''}`;say+=`在${sn(g.from)}換${g.name}，`}
+    h+=`<br>🚇 坐 <b style="color:${g.c}">${esc(g.name)}</b>「往 ${esc(g.dir)}」，坐 <b>${g.n}</b> 站到「${esc(sn(g.to))}」`;say+=`坐${g.name}往${g.dir}方向，坐${g.n}站到${sn(g.to)}，`});
+   h+='<br>👣 從海山站走回家約 10～15 分鐘。';say+='再從海山站走回家。';
+   opts.push({kind:'mrt',mins,html:h,say,far:ns.d>1.5});
+  }
+ }
+ opts.sort((a,b)=>a.mins-b.mins);
+ const arrive=m=>twClock(Date.now()+m*60000);
+ let h=`<h2>🚌 公交回家</h2><p class="note">📍 你現在離家大約 ${mm(dHome)}${ns?`，最近的捷運站是「${esc(sn(ns.n))}」`:''}。</p>`;
+ homeSpeak=`你現在離家大約${mm(dHome)}。`;
+ if(!opts.length)h+='<p>附近找不到回家的公車或捷運。</p>';
+ opts.slice(0,3).forEach((o,i)=>{
+  const title=o.kind==='walk'?'🚶 走路回家':o.kind==='bus'?`🚌 坐公車 ${esc(o.route)}`:'🚇 坐捷運';
+  h+=`<div class="opt ${i===0?'best':''}"><h3>${title}${i===0?'<span class="badge">👍 最快</span>':''}</h3><p class="big">大約 <b>${o.mins}</b> 分鐘，${esc(arrive(o.mins))} 左右到家</p><p class="big">${o.html}</p></div>`;
+  if(i<2)homeSpeak+=(i===0?'最快的是：':'也可以')+o.say+`大約${o.mins}分鐘到家。`;
+ });
+ if(dHome>3000||(opts[0]&&opts[0].mins>60))h+='<div class="walk">🚕 太遠或太累的話，坐計程車最輕鬆：按右上角「回家」，把地址給司機看。</div>';
+ const dest=HOME()||'新北市土城區廣福國小';
+ h+=`<a class="btn" style="background:var(--ok)" href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(dest)}&travelmode=transit">🗺️ 用地圖帶我回家</a><button class="btn hot" type="button" id="homeSay">🔊 唸給我聽</button><button class="btn ghost" type="button" id="homeAgain">🔄 重新找位置</button>`;
+ box.innerHTML=h;
+ $('homeSay').addEventListener('click',e=>speak(homeSpeak,e.currentTarget));
+ $('homeAgain').addEventListener('click',goHome);
+ box.querySelectorAll('.remind').forEach(b=>b.addEventListener('click',()=>startRide(+b.dataset.la,+b.dataset.lo,b.dataset.name)));
+}
+$('goHomeBtn').addEventListener('click',goHome);
+$('drvBus').addEventListener('click',()=>{drv.hidden=true;show('tab-go');goHome()});
+
 /* ---------- 公車下車提醒：用手機定位，快到站時震動＋說話 ---------- */
 let rideWatch=null,wake=null,rideStage=0;
 function sayNow(t){stop();speak(t)}
@@ -593,9 +674,9 @@ async function gunzipJSON(url){
  return JSON.parse(txt.replace(/^﻿/,''));
 }
 async function loadStops(){
- try{const c=JSON.parse(localStorage.getItem('stopsInfo2')||'null');if(c&&Date.now()-c.at<864e5){stopsInfo=c.d;return}}catch(e){}
+ try{const c=JSON.parse(localStorage.getItem('stopsInfo3')||'null');if(c&&Date.now()-c.at<864e5){stopsInfo=c.d;return}}catch(e){}
  const r=await fetch(STOPS_URL+'?d='+new Date().toISOString().slice(0,10));stopsInfo=await r.json();
- try{localStorage.setItem('stopsInfo2',JSON.stringify({at:Date.now(),d:stopsInfo}))}catch(e){}
+ try{localStorage.setItem('stopsInfo3',JSON.stringify({at:Date.now(),d:stopsInfo}))}catch(e){}
 }
 function etaText(sec){
  if(sec==null||isNaN(sec))return['沒有資料','off'];
@@ -628,6 +709,7 @@ async function loadBus(){
   const ok=res.filter(r=>r.status==='fulfilled').map(r=>r.value);
   if(!ok.length)throw new Error('eta');
   const want=new Set();Object.values(stopsInfo.stops).flat().forEach(x=>want.add(x.src+'|'+x.sid));
+  Object.entries(stopsInfo.lines||{}).forEach(([k,arr])=>{const src=k.split('|')[0];arr.forEach(z=>{if(z[3])want.add(src+'|'+z[3])})});
   const m={};let t=0;
   ok.forEach(([src,d])=>{
    const up=d.EssentialInfo&&d.EssentialInfo.UpdateTime;if(up){const ms=Date.parse(up.replace(/\//g,'-').replace(' ','T')+'+08:00');if(ms>t)t=ms}
