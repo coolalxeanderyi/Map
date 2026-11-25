@@ -100,6 +100,7 @@ label.big{display:block;font-size:23px;font-weight:900;margin-bottom:10px}
 <label class="big" for="q">🌸 想去哪裡玩呀？打字或按下面的地方</label>
 <form class="search" id="f"><input id="q" type="search" placeholder="例如：台北101、淡水 🚃" autocomplete="off"><button class="btn hot" type="submit">查</button></form>
 <div class="chips" id="pop"></div>
+<div id="learned"></div>
 <div class="from"><span>從哪一站出發：</span><select id="start"></select></div>
 </section>
 <section class="card" id="live">
@@ -213,6 +214,7 @@ const sn=s=>s.endsWith('站')?s:s+'站';
 const norm=s=>s.replace(/\s/g,'').replace(/^(捷運|臺北|台北市)/,'').replace(/臺/g,'台').replace(/(捷運站|站)$/,'');
 function find(q){
  const k=norm(q);if(!k)return null;
+ const L=learned()[q.trim()];if(L)return{dest:q.trim(),st:L.st,tip:L.tip,learned:true};
  if(PLACES[k])return{dest:k,st:PLACES[k][0],tip:PLACES[k][1]};
  if(ADJ[k])return{dest:sn(k),st:k};
  for(const p in PLACES)if(k.includes(p)||(p.length>=2&&p.includes(k)))return{dest:p,st:PLACES[p][0],tip:PLACES[p][1]};
@@ -220,20 +222,53 @@ function find(q){
  return s?{dest:sn(s),st:s}:{dest:q,st:null};
 }
 
+
+/* ---------- 站的位置（找最近的捷運站用） ---------- */
+const POS={};'南港展覽館,25.055288,121.6175001;南港軟體園區,25.0599419,121.6159291;東湖,25.0671258,121.6117183;葫洲,25.0724829,121.607389;大湖公園,25.083351,121.602658;內湖,25.0838996,121.5942576;文德,25.078436,121.585527;港墘,25.0801772,121.5756865;西湖,25.081906,121.567597;劍南路,25.0847974,121.5550972;大直,25.0796581,121.5468824;松山機場,25.063718,121.549643;中山國中,25.0607843,121.5439248;南京復興,25.0519749,121.544514;忠孝復興,25.0417843,121.5448626;大安,25.0331472,121.5438667;科技大樓,25.0261364,121.5436451;六張犁,25.02379,121.553126;麟光,25.0184814,121.5587292;辛亥,25.005483,121.557102;萬芳醫院,24.999335,121.558095;萬芳社區,24.99784,121.570705;木柵,24.998231,121.573147;動物園,24.9981707,121.5794981;松山,25.048889,121.577778;南京三民,25.051652,121.5625193;台北小巨蛋,25.0512968,121.5499054;松江南京,25.0526894,121.5327444;中山,25.052433,121.520518;北門,25.0495568,121.5079931;西門,25.0417459,121.508652;小南門,25.035277,121.510975;中正紀念堂,25.032406,121.518244;古亭,25.025473,121.523279;台電大樓,25.02072,121.527181;公館,25.014347,121.534412;萬隆,25.0025439,121.538552;景美,24.9921332,121.5405874;大坪林,24.9831,121.5418;七張,24.9750109,121.54322;小碧潭,24.9720931,121.5295777;新店區公所,24.967498,121.541192;新店,24.9578719,121.537557;南港,25.0518136,121.6060423;昆陽,25.050461,121.593268;後山埤,25.045248,121.582961;永春,25.041007,121.576419;市政府,25.0409916,121.5651802;國父紀念館,25.0410987,121.5579885;忠孝敦化,25.0413218,121.5516538;忠孝新生,25.042023,121.533107;善導寺,25.044746,121.523133;台北車站,25.046374,121.517896;龍山寺,25.0354487,121.4995792;江子翠,25.0296499,121.472311;新埔,25.0242359,121.468174;板橋,25.014579,121.4625101;府中,25.0085549,121.459183;亞東醫院,24.9975632,121.4524089;海山,24.985339,121.448786;土城,24.973183,121.444156;永寧,24.9666709,121.4366324;頂埔,24.9588815,121.4178224;象山,25.0329,121.5707;台北101/世貿,25.0331,121.5630;信義安和,25.0334,121.5528;大安森林公園,25.0335,121.5359;東門,25.0339,121.5287;台大醫院,25.041003,121.515715;雙連,25.057805,121.520627;民權西路,25.062879,121.519346;圓山,25.0708435,121.5200551;劍潭,25.084873,121.525078;士林,25.093535,121.52623;芝山,25.1030599,121.522514;明德,25.109721,121.518848;石牌,25.115078,121.515136;唭哩岸,25.120872,121.506252;奇岩,25.126605,121.500889;北投,25.131977,121.498695;新北投,25.136947,121.502534;復興崗,25.137532,121.485424;忠義,25.131058,121.473226;關渡,25.12571,121.467188;竹圍,25.133598,121.4592857;紅樹林,25.154693,121.458791;淡水,25.167935,121.445459;南勢角,24.989714,121.509767;景安,24.9937133,121.5048071;永安市場,25.0023175,121.5110392;頂溪,25.0128479,121.515416;行天宮,25.0604614,121.53282;中山國小,25.0627591,121.5271317;大橋頭,25.0631761,121.5131091;台北橋,25.063048,121.500932;菜寮,25.0594539,121.491432;三重,25.0552855,121.4841009;先嗇宮,25.0465799,121.47129;頭前庄,25.0397749,121.4607719;新莊,25.0362597,121.4524832;輔大,25.032913,121.4353916;丹鳳,25.0289,121.4226;迴龍,25.0218,121.4115;三重國小,25.0707449,121.4965;三和國中,25.077349,121.48749;徐匯中學,25.08035,121.479925;三民高中,25.0856209,121.4729395;蘆洲,25.0915536,121.4644714;十四張,24.9858,121.5285;秀朗橋,24.9905,121.5211;景平,24.9922,121.5106;中和,24.9995,121.4860;橋和,25.0056,121.4808;中原,25.0088,121.4842;板新,25.0145,121.4729;新埔民生,25.0261,121.4673;幸福,25.0500,121.4597;新北產業園區,25.0613,121.4598;新莊副都心,25.0597,121.4504;泰山,25.0547,121.4319;泰山貴和,25.0587,121.4106;體育大學,25.0749,121.3807;長庚醫院,25.0612,121.3660;林口,25.0617,121.3590;山鼻,25.0756,121.2683;坑口,25.0841,121.2392;機場第一航廈,25.0814,121.2378;機場第二航廈,25.0774,121.2310'.split(';').forEach(x=>{const [n,a,b]=x.split(',');POS[n]=[+a,+b]});
+const km=(a,b,c,d)=>{const r=Math.PI/180,x=(d-b)*r*Math.cos((a+c)/2*r),y=(c-a)*r;return 6371*Math.hypot(x,y)};
+const nearestSt=(lat,lon)=>Object.entries(POS).map(([n,p])=>({n,d:km(lat,lon,p[0],p[1])})).sort((x,y)=>x.d-y.d)[0];
+/* ---------- 查不到的地方：上網找，找到就記在手機裡 ---------- */
+const LKEY='learnedPlaces';
+const learned=()=>{try{return JSON.parse(localStorage.getItem(LKEY)||'{}')}catch(e){return{}}};
+const remember=(q,v)=>{try{const m=learned();m[q]=v;localStorage.setItem(LKEY,JSON.stringify(m))}catch(e){}};
+async function lookup(q){
+ const near='&viewbox=121.2,25.3,121.8,24.85';
+ const tries=[
+  async()=>{const r=await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=tw&accept-language=zh-TW'+near+'&q='+encodeURIComponent(q));const j=await r.json();return j[0]&&{lat:+j[0].lat,lon:+j[0].lon,name:j[0].name||q,addr:j[0].display_name}},
+  async()=>{const r=await fetch('https://photon.komoot.io/api/?limit=1&lat=25.03&lon=121.52&q='+encodeURIComponent(q));const j=await r.json();const f=j.features&&j.features[0];return f&&{lat:f.geometry.coordinates[1],lon:f.geometry.coordinates[0],name:f.properties.name||q,addr:[f.properties.city,f.properties.district,f.properties.street].filter(Boolean).join(' ')}}
+ ];
+ for(const t of tries){try{const v=await t();if(v&&km(v.lat,v.lon,25.03,121.52)<120)return v}catch(e){}}
+ return null;
+}
+function drawLearned(){
+ const m=learned(),ks=Object.keys(m);
+ $('learned').innerHTML=ks.length?'<p class="note" style="margin:14px 0 0">📌 之前查過的地方（記在這支手機裡）：</p><div class="chips">'+ks.map(k=>`<button type="button" data-q="${esc(k)}">${esc(k)}</button>`).join('')+'</div>':'';
+}
+$('learned').addEventListener('click',e=>{const b=e.target.closest('button');if(b){$('q').value=b.dataset.q;go()}});
+
 $('start').innerHTML=['海山','土城','永寧','頂埔','亞東醫院','板橋'].map(s=>`<option ${s==='海山'?'selected':''}>${s}</option>`).join('');
 $('pop').innerHTML=POP.map(p=>`<button type="button" data-q="${esc(p)}">${esc(p)}</button>`).join('');
+drawLearned();
 $('pop').addEventListener('click',e=>{const b=e.target.closest('button');if(b){$('q').value=b.dataset.q;go()}});
 $('f').addEventListener('submit',e=>{e.preventDefault();go()});
 $('start').addEventListener('change',()=>{if($('q').value)go()});
 
 let speakText='';
-function go(){
+async function go(){
  const q=$('q').value.trim();if(!q)return;
- stop();const r=find(q),start=$('start').value,box=$('res');
- let h=`<h2>去 ${esc(r.dest)}</h2>`;speakText=`去${r.dest}。`;
+ stop();const start=$('start').value,box=$('res');let r=find(q);
+ if(!r.st){
+  box.innerHTML=`<h2>去 ${esc(q)}</h2><p class="sum">🔎 我上網幫你找「${esc(q)}」在哪裡，等我一下下……</p>`;box.hidden=false;box.scrollIntoView({behavior:'smooth',block:'start'});
+  const g=await lookup(q);
+  if(g){const n=nearestSt(g.lat,g.lon),walkMin=Math.max(1,Math.round(n.d*1000/60));
+   const tip=n.d>1.5?`「${q}」離「${sn(n.n)}」大約 ${n.d.toFixed(1)} 公里，有點遠，出站後建議坐計程車，或按下面的綠色按鈕查公車。`:`出站後走到「${q}」大約 ${walkMin} 分鐘（${Math.round(n.d*1000)} 公尺）。`;
+   r={dest:q,st:n.n,tip,found:g};remember(q,{st:n.n,tip,lat:g.lat,lon:g.lon,addr:g.addr||''});drawLearned();
+  }
+ }
+ let h=`<h2>去 ${esc(r.dest)}</h2>`+(r.found?`<p class="note">✅ 找到了！${esc(r.found.addr||'')}　已經記起來，下次查會更快。</p>`:'');speakText=`去${r.dest}。`;
  // ---- 捷運 ----
  h+='<h3>🚇 捷運怎麼坐</h3>';
- if(!r.st){h+=`<p>我不知道「${esc(q)}」在哪一個捷運站附近，請按下面的綠色按鈕，讓地圖幫你查。</p>`}
+ if(!r.st){h+=`<p>網路上也找不到「${esc(q)}」，可能是名字不一樣，換個說法試試看（例如加上路名或「台北」），或按下面的綠色按鈕用 Google 地圖查。</p>`}
  else if(r.st===start){h+=`<p class="sum">就在「${esc(sn(start))}」，不用坐捷運！</p>`;if(r.tip)h+=`<div class="walk">👣 ${esc(r.tip)}</div>`;speakText+=`就在${start}站。${r.tip||''}`}
  else{
   const L=legs(route(start,r.st)),stops=L.reduce((a,g)=>a+g.n,0),mins=Math.round(stops*2.2+(L.length-1)*6);
