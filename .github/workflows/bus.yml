@@ -1,0 +1,31 @@
+name: 更新公車即時到站
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["scripts/fetch_bus.py", ".github/workflows/bus.yml"]
+permissions:
+  contents: write
+concurrency:
+  group: bus
+  cancel-in-progress: true
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: .cache
+          key: ntpc-static-${{ github.run_id }}
+          restore-keys: ntpc-static-
+      - run: python scripts/fetch_bus.py bus.json
+      - name: 存到 data 分支（只留最新一筆，不會讓 main 變亂）
+        run: |
+          mkdir out && cp bus.json out/ && cd out
+          git init -q -b data && git add bus.json
+          git -c user.name="bus-bot" -c user.email="bus-bot@users.noreply.github.com" commit -q -m "bus $(date -u +%FT%TZ)"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" data

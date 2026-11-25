@@ -65,6 +65,11 @@ label.big{display:block;font-size:23px;font-weight:900;margin-bottom:10px}
 .open{color:#fff;background:var(--ok);font-weight:900;border-radius:999px;padding:1px 10px}.closed{color:#fff;background:#c9a9a6;font-weight:900;border-radius:999px;padding:1px 10px}
 .fc .acts{margin-top:8px}.fc .btn{min-height:50px;font-size:18px}
 @media(prefers-reduced-motion:no-preference){.puff{animation:puff 2.4s ease-in-out infinite}.puff.b{animation-delay:1.2s}@keyframes puff{0%{transform:translate(0,0);opacity:0}30%{opacity:1}100%{transform:translate(-6px,-18px);opacity:0}}.wheel{animation:bob 1.2s ease-in-out infinite;transform-origin:center}@keyframes bob{50%{transform:translateY(-2px)}}}
+.eta{display:grid;gap:10px;margin-top:12px}
+.er{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;background:#fffaf2;border-radius:18px;padding:10px 14px}
+.er .no{background:var(--mint);color:#fff;font-weight:900;font-size:24px;border-radius:14px;padding:4px 12px;min-width:76px;text-align:center}
+.er .to{font-size:19px;line-height:1.3}.er .to small{display:block;color:var(--soft);font-size:15px}
+.er .t{font-weight:900;font-size:24px;white-space:nowrap;text-align:right}.er .t.soon{color:#fff;background:var(--hot);border-radius:12px;padding:2px 10px}.er .t.off{color:var(--soft);font-size:17px}
 </style>
 </head>
 <body>
@@ -91,6 +96,12 @@ label.big{display:block;font-size:23px;font-weight:900;margin-bottom:10px}
 <form class="search" id="f"><input id="q" type="search" placeholder="例如：台北101、淡水 🚃" autocomplete="off"><button class="btn hot" type="submit">查</button></form>
 <div class="chips" id="pop"></div>
 <div class="from"><span>從哪一站出發：</span><select id="start"></select></div>
+</section>
+<section class="card" id="live">
+<h2>🚏 家附近公車，還要幾分鐘？</h2>
+<div class="chips" id="stops"></div>
+<div id="eta"><p class="note">讀取中……</p></div>
+<p class="note" id="etaNote"></p>
 </section>
 <section class="card" id="res" hidden aria-live="polite"></section>
 </div>
@@ -213,7 +224,7 @@ $('start').addEventListener('change',()=>{if($('q').value)go()});
 let speakText='';
 function go(){
  const q=$('q').value.trim();if(!q)return;
- const r=find(q),start=$('start').value,box=$('res');
+ stop();const r=find(q),start=$('start').value,box=$('res');
  let h=`<h2>去 ${esc(r.dest)}</h2>`;speakText=`去${r.dest}。`;
  // ---- 捷運 ----
  h+='<h3>🚇 捷運怎麼坐</h3>';
@@ -239,13 +250,63 @@ function go(){
  h+=`<a class="btn" style="background:var(--ok)" href="${gdir(r.dest==='回家'||r.dest==='家'?HOME:r.dest,'transit')}">🗺️ 看公車怎麼坐（開地圖）</a>`;
  h+=`<button class="btn hot" type="button" id="say">🔊 唸給我聽</button>`;
  box.innerHTML=h;box.hidden=false;box.scrollIntoView({behavior:'smooth',block:'start'});
- $('say').addEventListener('click',()=>speak(speakText));
+ $('say').addEventListener('click',e=>speak(speakText,e.currentTarget));
 }
 
-/* ---------- 唸出來 ---------- */
-let voice=null;const pick=()=>{const vs=speechSynthesis.getVoices();voice=vs.find(v=>/zh[-_]TW/i.test(v.lang))||vs.find(v=>/^zh/i.test(v.lang))||null};
+/* ---------- 唸出來：Google 小姐 ---------- */
+// 整理成好唸的句子
+const clean=t=>t.replace(/\//g,'').replace(/～/g,'到').replace(/[^\p{L}\p{N}，。、！？：（）「」\s]/gu,'').replace(/[（）「」]/g,'，').replace(/，+/g,'，').replace(/\s+/g,'');
+// 每段不超過 150 字（Google 一次只能唸一小段）
+const chunks=t=>{const out=[];let cur='';for(const part of clean(t).split(/(?<=[。！？])/)){if(!part)continue;if((cur+part).length>150){if(cur)out.push(cur);cur=''}
+ if(part.length>150){part.split(/(?<=，)/).forEach(x=>{if((cur+x).length>150){out.push(cur);cur=''}cur+=x})}else cur+=part}if(cur)out.push(cur);return out};
+const audio=new Audio();let queue=[],playing=false,sayBtn=null;
+const gurl=t=>'https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=zh-TW&ttsspeed=0.9&q='+encodeURIComponent(t);
+const setBtn=on=>{playing=on;if(sayBtn)sayBtn.textContent=on?'⏹️ 停止':'🔊 唸給我聽'};
+function stop(){queue=[];audio.pause();if('speechSynthesis' in window)speechSynthesis.cancel();setBtn(false)}
+function next(){if(!queue.length){setBtn(false);return}const t=queue.shift();audio.src=gurl(t);audio.play().catch(()=>{queue.unshift(t);fallback()})}
+audio.addEventListener('ended',next);
+audio.addEventListener('error',()=>{if(playing)fallback(audio.src?decodeURIComponent(audio.src.split('&q=')[1]||''):'')});
+// 備用：手機內建語音（優先挑 Google 的中文聲音）
+let voice=null;const pick=()=>{const vs=speechSynthesis.getVoices(),zh=vs.filter(v=>/zh[-_](TW|Hant)/i.test(v.lang)||/國語|臺灣|台灣/.test(v.name));voice=zh.find(v=>/google/i.test(v.name))||zh.find(v=>/美佳|Mei-?Jia|Meijia/i.test(v.name))||zh[0]||vs.find(v=>/^zh/i.test(v.lang))||null};
 if('speechSynthesis' in window){pick();speechSynthesis.onvoiceschanged=pick}
-function speak(t){if(!('speechSynthesis' in window))return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t.replace(/\//g,''));u.lang='zh-TW';u.rate=.85;if(voice)u.voice=voice;speechSynthesis.speak(u)}
+function fallback(first){
+ if(!('speechSynthesis' in window)){setBtn(false);return}
+ const rest=(first?[first]:[]).concat(queue);queue=[];speechSynthesis.cancel();
+ rest.forEach((t,i)=>{const u=new SpeechSynthesisUtterance(t);u.lang='zh-TW';u.rate=.95;if(voice)u.voice=voice;if(i===rest.length-1)u.onend=()=>setBtn(false);speechSynthesis.speak(u)});
+}
+function speak(t,btn){if(playing){stop();return}sayBtn=btn||null;queue=chunks(t);if(!queue.length)return;setBtn(true);next()}
+
+
+/* ---------- 公車即時到站（每幾分鐘由 GitHub 自動抓新北市開放資料） ---------- */
+const BUS_URL='https://raw.githubusercontent.com/coolalxeanderyi/Map/data/bus.json';
+const ORDER=['廣福國小','廣福里','裕民廣場','捷運海山站','捷運土城站','土城區公所','捷運永寧站'];
+let busData=null,curStop=null;
+const rank=n=>{const i=ORDER.findIndex(o=>n.includes(o));return i<0?99:i};
+function etaText(sec,age){
+ if(sec==null)return['沒有資料','off'];
+ if(sec===-1)return['還沒發車','off'];if(sec===-2)return['這站不停','off'];if(sec===-3)return['末班車走了','off'];if(sec===-4)return['今天沒開','off'];if(sec<0)return['沒有資料','off'];
+ const m=Math.round((sec-age)/60);
+ return m<=1?['快到了！','soon']:[`${m} 分鐘`,m<=4?'soon':''];
+}
+function drawEta(){
+ if(!busData)return;
+ const names=Object.keys(busData.stops).sort((a,b)=>rank(a)-rank(b)||a.localeCompare(b));
+ if(!names.length){$('eta').innerHTML='<p>現在沒有公車資料，晚一點再看看。</p>';return}
+ if(!curStop||!busData.stops[curStop])curStop=names[0];
+ $('stops').innerHTML=names.map(n=>`<button type="button" aria-pressed="${n===curStop}" data-s="${esc(n)}">${esc(n)}</button>`).join('');
+ const age=Math.max(0,(Date.now()-new Date(busData.updated))/1000);
+ const seen=new Set();
+ const rows=busData.stops[curStop].filter(r=>{const key=r.route+'|'+r.to;if(seen.has(key))return false;seen.add(key);return true});
+ $('eta').innerHTML='<div class="eta">'+rows.map(r=>{const [t,c]=etaText(r.sec,age);return`<div class="er"><span class="no">${esc(r.route)}</span><span class="to">往 ${esc(r.to||'—')}</span><span class="t ${c}">${esc(t)}</span></div>`}).join('')+'</div>';
+ const mins=Math.round(age/60);
+ $('etaNote').textContent=`資料來源：新北市政府開放資料，${mins<1?'剛剛':mins+' 分鐘前'}更新（時間已經幫你扣掉了）。每分鐘自動重新整理。`;
+}
+async function loadBus(){
+ try{const r=await fetch(BUS_URL+'?t='+Date.now(),{cache:'no-store'});if(!r.ok)throw 0;busData=await r.json();drawEta()}
+ catch(e){if(!busData){$('eta').innerHTML='<p>公車資料暫時讀不到，可以先按下面的「看公車怎麼坐」用地圖查。</p>'}}
+}
+$('stops').addEventListener('click',e=>{const b=e.target.closest('button');if(b){curStop=b.dataset.s;drawEta()}});
+loadBus();setInterval(()=>{if(!document.hidden)loadBus()},60000);
 
 /* ---------- 美食 ---------- */
 // h: 營業時間 [[開,關],...]（24 小時制，小數 .5 = 30 分）；off: 公休（0=星期日）
