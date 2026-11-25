@@ -6,7 +6,7 @@ from datetime import datetime, timezone, timedelta
 BASE = "https://data.ntpc.gov.tw/api/datasets/{}/json?page={}&size={}"
 ETA, STOPS, ROUTES = "07f7ccb3-ed00-43c4-966d-08e9dab24e95", "34b402a8-53d9-483d-9406-24a682c2d6dc", "0ee4e6bf-cee6-4ec8-8fe1-71f544015127"
 # 要追蹤的站牌（名稱包含這些字就算）
-WANT = ["廣福國小", "廣福里", "捷運海山站", "捷運土城站", "土城區公所", "捷運永寧站", "裕民廣場"]
+WANT = ["廣福國小", "廣福里"]
 TZ = timezone(timedelta(hours=8))
 
 def get(url, tries=3):
