@@ -20,22 +20,31 @@ def lk(d, *names):
         if v not in (None, ""): return v
     return None
 
-out = {}
+out, lines = {}, {}
 for src, url in SRC.items():
     routes = {str(lk(r, "Id")): r for r in get(url.format("GetRoute"))}
-    n = 0
-    for s in get(url.format("GetStop")):
-        name = lk(s, "nameZh") or ""
-        if name not in WANT: continue
-        r = routes.get(str(lk(s, "routeId")))
-        if not r: continue
-        gb = str(lk(s, "goBack"))
+    allstops = get(url.format("GetStop"))
+    hit = [s for s in allstops if (lk(s, "nameZh") or "") in WANT and str(lk(s, "routeId")) in routes]
+    keys = {(str(lk(s, "routeId")), str(lk(s, "goBack"))) for s in hit}
+    # 這幾條公車沿路的所有站（照順序），給網頁算「坐幾站、在哪下車」
+    seqs = {}
+    for s in allstops:
+        k = (str(lk(s, "routeId")), str(lk(s, "goBack")))
+        if k in keys:
+            try: la, lo = round(float(lk(s, "latitude")), 5), round(float(lk(s, "longitude")), 5)
+            except (TypeError, ValueError): la = lo = None
+            seqs.setdefault(k, []).append((int(lk(s, "seqNo") or 0), lk(s, "nameZh"), la, lo))
+    for (rid, gb), lst in seqs.items():
+        lst.sort()
+        lines[f"{src}|{rid}|{gb}"] = [[n, la, lo] for _, n, la, lo in lst]
+    for s in hit:
+        rid, gb = str(lk(s, "routeId")), str(lk(s, "goBack"))
+        r = routes[rid]
         to = lk(r, "destinationZh") if gb == "0" else lk(r, "departureZh")
-        out.setdefault(name, []).append({"sid": str(lk(s, "Id")), "rid": str(lk(s, "routeId")), "src": src,
-                                         "route": lk(r, "nameZh"), "to": to or ""})
-        n += 1
-    print(src, "stops matched:", n)
+        out.setdefault(lk(s, "nameZh"), []).append({"sid": str(lk(s, "Id")), "rid": rid, "src": src, "gb": gb,
+            "seq": int(lk(s, "seqNo") or 0), "route": lk(r, "nameZh"), "to": to or ""})
+    print(src, "stops matched:", len(hit), "lines:", len(keys))
 for v in out.values(): v.sort(key=lambda x: (x["route"], x["to"]))
-json.dump({"built": datetime.now(timezone(timedelta(hours=8))).isoformat(timespec="seconds"), "stops": out},
+json.dump({"built": datetime.now(timezone(timedelta(hours=8))).isoformat(timespec="seconds"), "stops": out, "lines": lines},
           open(sys.argv[1] if len(sys.argv) > 1 else "stops.json", "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
 print({k: [x["route"] + "→" + x["to"] for x in v] for k, v in out.items()})
