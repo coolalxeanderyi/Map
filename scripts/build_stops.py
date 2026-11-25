@@ -33,10 +33,10 @@ for src, url in SRC.items():
         if k in keys:
             try: la, lo = round(float(lk(s, "latitude")), 5), round(float(lk(s, "longitude")), 5)
             except (TypeError, ValueError): la = lo = None
-            seqs.setdefault(k, []).append((int(lk(s, "seqNo") or 0), lk(s, "nameZh"), la, lo))
+            seqs.setdefault(k, []).append((int(lk(s, "seqNo") or 0), lk(s, "nameZh"), la, lo, str(lk(s, "Id"))))
     for (rid, gb), lst in seqs.items():
         lst.sort()
-        lines[f"{src}|{rid}|{gb}"] = [[n, la, lo] for _, n, la, lo in lst]
+        lines[f"{src}|{rid}|{gb}"] = [[n, la, lo, sid] for _, n, la, lo, sid in lst]
     for s in hit:
         rid, gb = str(lk(s, "routeId")), str(lk(s, "goBack"))
         r = routes[rid]
