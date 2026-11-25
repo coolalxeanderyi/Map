@@ -141,7 +141,7 @@ label.big{display:block;font-size:23px;font-weight:900;margin-bottom:10px}
 
 <div id="driver" role="dialog" aria-modal="true" aria-label="給司機看的地址" hidden>
 <p class="dhint">司機您好，請載我到：</p>
-<p class="addr">新北市土城區<br>學府路一段98巷<br>30之1號<br><span>（學府之森）</span></p>
+<p class="addr">（地址已移除）<br><br><span>（）</span></p>
 <div class="dbtns"><a class="btn" id="navHome" href="#">🗺️ 我自己走回家（導航）</a><button class="btn hot" id="closeDriver" type="button">關閉</button></div>
 </div>
 <div id="offline" hidden>📵 現在沒有網路：公車時間、查新地方暫時不能用，其他都可以看。</div>
@@ -149,7 +149,7 @@ label.big{display:block;font-size:23px;font-weight:900;margin-bottom:10px}
 {
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const HOME='新北市土城區學府路一段98巷30之1號';
+const HOME='（地址已移除）';
 const gdir=(d,m)=>`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(HOME)}&destination=${encodeURIComponent(d)}&travelmode=${m}`;
 const gsearch=q=>`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
 

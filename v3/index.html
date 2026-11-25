@@ -114,14 +114,14 @@ ol.steps li.now::before{background:var(--home)}
 
 <div id="driver" role="dialog" aria-label="給司機看的地址">
 <div style="font-size:clamp(22px,4vw,34px)">司機您好，請載我到：</div>
-<div class="addr">新北市土城區<br>學府路一段98巷<br>30之1號<br>（學府之森）</div>
+<div class="addr">（地址已移除）<br><br>（）</div>
 <button class="btn" id="closeDriver" style="align-self:flex-start;font-size:26px;min-height:70px">關閉</button>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 {
-const ADDR='新北市土城區學府路一段98巷30之1號';
+const ADDR='（地址已移除）';
 const $=id=>document.getElementById(id);
 const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -205,10 +205,10 @@ const PLACES=[
  {id:'mkt',icon:'🥬',name:'學府市場（買菜）',short:'學府市場',sub:'走路約 9 分鐘',dest:'土城學府市場',mode:'walking',q:'學府市場 土城',steps:['從家出門，走路大約 9 分鐘。','傳統市場早上東西最多最新鮮。','地上常常濕濕的，走路要慢慢走。']},
  {id:'gym',icon:'🏊',name:'國民運動中心',short:'運動中心',sub:'走路約 6～8 分鐘',dest:'土城國民運動中心',mode:'walking',q:'土城國民運動中心',steps:['從家出門，走路大約 6～8 分鐘。','帶敬老卡，可以用點數付入場費；也有長輩免費的時段，可以問櫃台。','運動前先暖身，累了就休息。']},
  {id:'sx',icon:'⛩️',name:'三峽、鶯歌老街',short:'三峽鶯歌',sub:'換三鶯線',dest:'三峽老街',mode:'transit',steps:[MRT_WALK,IN,'坐「往 頂埔」方向，坐到最後一站「頂埔站」。','在站裡跟著「三鶯線」的牌子走去轉車，不用出站。','三峽坐到「台北大學」一帶；鶯歌坐到「鶯歌」相關站，聽廣播下車。']},
- {id:'home',icon:'🏠',name:'回家',short:'回家',sub:'學府之森',dest:ADDR,mode:'transit',steps:['坐捷運回到「海山站」下車（從板橋、台北來的人坐「往 頂埔」方向）。','從海山站走回家，大約 10～15 分鐘；累了就坐計程車，按「給司機看地址」。','迷路了就按最上面的「找我在哪裡」，再按「帶我回家」。']}
+ {id:'home',icon:'🏠',name:'回家',short:'回家',sub:'',dest:ADDR,mode:'transit',steps:['坐捷運回到「海山站」下車（從板橋、台北來的人坐「往 頂埔」方向）。','從海山站走回家，大約 10～15 分鐘；累了就坐計程車，按「給司機看地址」。','迷路了就按最上面的「找我在哪裡」，再按「帶我回家」。']}
 ];
 (async()=>{
- if(!home){const g=await geo('新北市土城區學府路一段98巷');if(g&&dist(g[0],g[1],24.9853,121.4488)<2500){home=g;store.set('home',g)}}
+ if(!home){const g=await geo('新北市土城區（地址已移除）');if(g&&dist(g[0],g[1],24.9853,121.4488)<2500){home=g;store.set('home',g)}}
  drawHome();
  for(const p of PLACES.filter(p=>p.q)){const g=await geo(p.q);if(g&&dist(g[0],g[1],24.98,121.45)<5000){p.pos=g;label(g[0],g[1],p.icon+' '+p.short,'pl')}await new Promise(r=>setTimeout(r,1100))}
 })();
