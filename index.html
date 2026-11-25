@@ -77,7 +77,7 @@ footer{margin-top:26px;font-size:16px;color:var(--soft)}
 <body>
 <header><div class="wrap">
 <h1>爺爺奶奶的<br>土城生活小幫手</h1>
-<p>我們家：學府之森（土城區學府路）。不知道怎麼走，先看這一頁 👇 也可以打電話給家人。</p>
+<p>我們家：學府之森（土城區學府路）。不知道怎麼走，先看這一頁 👇</p>
 </div></header>
 
 <div class="wrap">
@@ -88,7 +88,6 @@ footer{margin-top:26px;font-size:16px;color:var(--soft)}
 <a href="#doctor">🏥 看醫生</a>
 <a href="#daily">🛒 買菜散步</a>
 <a href="#card">💳 敬老卡</a>
-<a href="#sos" class="sos">☎ 緊急電話</a>
 </nav>
 
 <section id="home">
@@ -179,20 +178,6 @@ footer{margin-top:26px;font-size:16px;color:var(--soft)}
 <p class="note">卡裡的「儲值金」要另外加值，在捷運站或超商都可以加。</p>
 </section>
 
-<section id="sos">
-<h2><span class="tag" style="background:var(--red)">☎</span>緊急電話（按一下就能打）</h2>
-<div class="tel" id="fam"></div>
-<h3>公家電話</h3>
-<div class="tel">
-<a href="tel:119"><b>119</b>救護車、火災、身體很不舒服</a>
-<a href="tel:110"><b>110</b>警察、遇到壞人</a>
-<a href="tel:165"><b>165</b>接到怪電話、有人要你匯錢（防詐騙）</a>
-<a href="tel:1999"><b>1999</b>新北市民專線，什麼都可以問</a>
-<a href="tel:1966"><b>1966</b>長照服務專線</a>
-<a href="tel:0222732000"><b style="font-size:30px">02-2273-2000</b>土城區公所</a>
-</div>
-<div class="box"><b>防詐騙：</b>有人打電話說「我是你孫子出事了」、「要你去 ATM 操作」，<b>先掛掉</b>，再打給家人確認！</div>
-</section>
 
 <footer>家人整理・資料查於 2026 年 11 月。班次與規定可能會變，有疑問請打 1999 或問家人。</footer>
 </div>
@@ -209,9 +194,6 @@ const stations=[["頂埔","BL01"],["永寧","BL02"],["土城","BL03"],["海山",
 const line=document.getElementById('line');
 line.innerHTML=stations.map(([n,c,me,gap])=>`<div class="st${me?' me':''}${gap?' gap':''}">${me?'<span class="pin">🏠 我們家這站</span>':''}<i></i><b>${n}</b><small>${c}</small></div>`).join('');
 
-// 家人電話：把名字和號碼填在這裡
-const family=[["孫子 Alexander",""],["兒子／女兒",""]];
-document.getElementById('fam').innerHTML=family.map(([n,t])=>t?`<a class="fam" href="tel:${t.replace(/\D/g,'')}"><b style="font-size:30px">${t}</b>${n}</a>`:`<a class="fam" aria-disabled="true"><b style="font-size:26px">（電話待填）</b>${n}</a>`).join('');
 
 const d=document.getElementById('driver');
 document.getElementById('showDriver').addEventListener('click',()=>d.classList.add('on'));
