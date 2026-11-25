@@ -1,31 +1,24 @@
-name: 更新公車即時到站
+name: 更新公車站牌清單
+# 只整理「這兩個站牌有哪些公車」，一天一次就夠；即時到站時間由網頁直接抓。
 on:
   schedule:
-    - cron: "*/5 * * * *"
+    - cron: "17 19 * * *"
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ["scripts/fetch_bus.py", ".github/workflows/bus.yml"]
+    paths: ["scripts/build_stops.py", ".github/workflows/bus.yml"]
 permissions:
   contents: write
-concurrency:
-  group: bus
-  cancel-in-progress: true
 jobs:
-  fetch:
+  build:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/cache@v4
-        with:
-          path: .cache
-          key: ntpc-static-${{ github.run_id }}
-          restore-keys: ntpc-static-
-      - run: python scripts/fetch_bus.py bus.json
-      - name: 存到 data 分支（只留最新一筆，不會讓 main 變亂）
+      - run: python scripts/build_stops.py stops.json
+      - name: 存到 data 分支
         run: |
-          mkdir out && cp bus.json out/ && cd out
-          git init -q -b data && git add bus.json
-          git -c user.name="bus-bot" -c user.email="bus-bot@users.noreply.github.com" commit -q -m "bus $(date -u +%FT%TZ)"
+          mkdir out && cp stops.json out/ && cd out
+          git init -q -b data && git add stops.json
+          git -c user.name="bus-bot" -c user.email="bus-bot@users.noreply.github.com" commit -q -m "stops $(date -u +%F)"
           git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" data
