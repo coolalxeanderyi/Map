@@ -317,36 +317,63 @@ function fallback(first){
 function speak(t,btn){if(playing){stop();return}sayBtn=btn||null;queue=chunks(t);if(!queue.length)return;setBtn(true);next()}
 
 
-/* ---------- 公車即時到站（每幾分鐘由 GitHub 自動抓新北市開放資料） ---------- */
-const BUS_URL='https://raw.githubusercontent.com/coolalxeanderyi/Map/data/bus.json';
+/* ---------- 公車即時到站：直接抓新北市、台北市公車動態資訊中心的即時檔案（約每分鐘更新） ---------- */
+const STOPS_URL='https://raw.githubusercontent.com/coolalxeanderyi/Map/data/stops.json';
+const ETA_URL={ntpc:'https://tcgbusfs.blob.core.windows.net/ntpcbus/GetEstimateTime.gz',tpe:'https://tcgbusfs.blob.core.windows.net/blobbus/GetEstimateTime.gz'};
 const ORDER=['廣福國小','廣福里'];
-let busData=null,curStop=null;
-const rank=n=>{const i=ORDER.findIndex(o=>n.includes(o));return i<0?99:i};
-function etaText(sec,age){
- if(sec==null)return['沒有資料','off'];
+let stopsInfo=null,etaMap={},etaTime=null,curStop=null,etaFail=false;
+async function gunzipJSON(url){
+ const r=await fetch(url+'?t='+Date.now(),{cache:'no-store'});if(!r.ok)throw new Error(r.status);
+ const buf=new Uint8Array(await r.arrayBuffer());
+ let txt;
+ if(buf[0]===0x1f&&buf[1]===0x8b){
+  if('DecompressionStream' in window){txt=await new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream('gzip'))).text()}
+  else{if(!window.pako)await new Promise((ok,no)=>{const sc=document.createElement('script');sc.src='https://unpkg.com/pako@2.1.0/dist/pako_inflate.min.js';sc.onload=ok;sc.onerror=no;document.head.appendChild(sc)});txt=window.pako.inflate(buf,{to:'string'})}
+ }else txt=new TextDecoder().decode(buf);
+ return JSON.parse(txt.replace(/^﻿/,''));
+}
+async function loadStops(){
+ try{const c=JSON.parse(localStorage.getItem('stopsInfo')||'null');if(c&&Date.now()-c.at<864e5){stopsInfo=c.d;return}}catch(e){}
+ const r=await fetch(STOPS_URL+'?d='+new Date().toISOString().slice(0,10));stopsInfo=await r.json();
+ try{localStorage.setItem('stopsInfo',JSON.stringify({at:Date.now(),d:stopsInfo}))}catch(e){}
+}
+function etaText(sec){
+ if(sec==null||isNaN(sec))return['沒有資料','off'];
  if(sec===-1)return['還沒發車','off'];if(sec===-2)return['這站不停','off'];if(sec===-3)return['末班車走了','off'];if(sec===-4)return['今天沒開','off'];if(sec<0)return['沒有資料','off'];
- const m=Math.round((sec-age)/60);
+ const m=Math.floor(sec/60);
  return m<=1?['快到了！','soon']:[`${m} 分鐘`,m<=4?'soon':''];
 }
 function drawEta(){
- if(!busData)return;
- const names=Object.keys(busData.stops).filter(n=>rank(n)<99).sort((a,b)=>rank(a)-rank(b)||a.localeCompare(b));
- if(!names.length){$('eta').innerHTML='<p>現在沒有公車資料，晚一點再看看。</p>';return}
- if(!curStop||!busData.stops[curStop])curStop=names[0];
+ if(!stopsInfo)return;
+ const names=ORDER.filter(n=>stopsInfo.stops[n]);
+ if(!names.length){$('eta').innerHTML='<p>找不到站牌資料。</p>';return}
+ if(!curStop||!names.includes(curStop))curStop=names[0];
  $('stops').innerHTML=names.map(n=>`<button type="button" aria-pressed="${n===curStop}" data-s="${esc(n)}">${esc(n)}</button>`).join('');
- const age=Math.max(0,(Date.now()-new Date(busData.updated))/1000);
- const seen=new Set();
- const rows=busData.stops[curStop].filter(r=>{const key=r.route+'|'+r.to;if(seen.has(key))return false;seen.add(key);return true});
- $('eta').innerHTML='<div class="eta">'+rows.map(r=>{const [t,c]=etaText(r.sec,age);return`<div class="er"><span class="no">${esc(r.route)}</span><span class="to">往 ${esc(r.to||'—')}</span><span class="t ${c}">${esc(t)}</span></div>`}).join('')+'</div>';
- const mins=Math.round(age/60);
- $('etaNote').textContent=`資料來源：新北市政府開放資料，${mins<1?'剛剛':mins+' 分鐘前'}更新（時間已經幫你扣掉了）。每分鐘自動重新整理。`;
+ const age=etaTime?Math.max(0,(Date.now()-etaTime)/1000):0;
+ const rows=stopsInfo.stops[curStop].map(x=>{const v=etaMap[x.src+'|'+x.sid];let sec=v==null?null:+v;if(sec>0)sec=Math.max(0,sec-age);return{...x,sec}})
+  .sort((a,b)=>{const k=x=>x.sec==null||x.sec<0?1e9-(x.sec||0):x.sec;return k(a)-k(b)});
+ $('eta').innerHTML='<div class="eta">'+rows.map(r=>{const [t,c]=etaText(r.sec);return`<div class="er"><span class="no">${esc(r.route)}</span><span class="to">往 ${esc(r.to||'—')}</span><span class="t ${c}">${esc(t)}</span></div>`}).join('')+'</div>';
+ const tm=etaTime?new Date(etaTime).toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'}):'';
+ $('etaNote').textContent=etaFail?'⚠️ 即時資料暫時讀不到，下面是上一次的資料。':`即時資料（新北市、台北市公車動態資訊中心），${tm} 更新，每 30 秒自動重新整理。`;
 }
 async function loadBus(){
- try{const r=await fetch(BUS_URL+'?t='+Date.now(),{cache:'no-store'});if(!r.ok)throw 0;busData=await r.json();drawEta()}
- catch(e){if(!busData){$('eta').innerHTML='<p>公車資料暫時讀不到，可以先按下面的「看公車怎麼坐」用地圖查。</p>'}}
+ try{
+  if(!stopsInfo)await loadStops();
+  const res=await Promise.allSettled(Object.entries(ETA_URL).map(async([src,u])=>[src,await gunzipJSON(u)]));
+  const ok=res.filter(r=>r.status==='fulfilled').map(r=>r.value);
+  if(!ok.length)throw new Error('eta');
+  const want=new Set();Object.values(stopsInfo.stops).flat().forEach(x=>want.add(x.src+'|'+x.sid));
+  const m={};let t=0;
+  ok.forEach(([src,d])=>{
+   const up=d.EssentialInfo&&d.EssentialInfo.UpdateTime;if(up){const ms=Date.parse(up.replace(/\//g,'-').replace(' ','T')+'+08:00');if(ms>t)t=ms}
+   (d.BusInfo||[]).forEach(b=>{const k=src+'|'+b.StopID;if(want.has(k))m[k]=b.EstimateTime})
+  });
+  etaMap=m;etaTime=t||Date.now();etaFail=false;drawEta();
+ }catch(e){etaFail=true;if(stopsInfo)drawEta();else $('eta').innerHTML='<p>公車資料暫時讀不到，可以先按下面的「看公車怎麼坐」用地圖查。</p>'}
 }
 $('stops').addEventListener('click',e=>{const b=e.target.closest('button');if(b){curStop=b.dataset.s;drawEta()}});
-loadBus();setInterval(()=>{if(!document.hidden)loadBus()},60000);
+loadBus();setInterval(()=>{if(!document.hidden)loadBus()},30000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)loadBus()});
 
 /* ---------- 美食 ---------- */
 // 美食資料放在 food.json（可以用 admin.html 後台修改）
