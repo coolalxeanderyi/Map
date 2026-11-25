@@ -8,8 +8,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: |
-          U="https://data.ntpc.gov.tw/api/datasets/07f7ccb3-ed00-43c4-966d-08e9dab24e95/json"
-          echo "== CORS headers (size=1000)"; curl -s -D - -o /dev/null -H "Origin: https://coolalxeanderyi.github.io" "$U?page=0&size=1000" | grep -i -E "^HTTP|access-control|content-encoding|content-length"
-          for s in 5000 20000 50000; do echo "== size=$s"; curl -s --compressed -w "time=%{time_total}s bytes=%{size_download}\n" -o /tmp/o.json "$U?page=0&size=$s"; python3 -c "import json;print('rows',len(json.load(open('/tmp/o.json'))))"; done
-          echo "== gzip transfer size for size=50000"; curl -s -H "Accept-Encoding: gzip" -o /tmp/g -w "gz_bytes=%{size_download}\n" "$U?page=0&size=50000"
-          echo "== filter tests"; curl -s "$U?page=0&size=5&filters=StopID%3D12345" | head -c 300; echo
+          for U in https://tcgbusfs.blob.core.windows.net/ntpcbus/GetEstimateTime.gz https://tcgbusfs.blob.core.windows.net/blobbus/GetEstimateTime.gz https://tcgbusfs.blob.core.windows.net/ntpcbus/GetStop.gz https://tcgbusfs.blob.core.windows.net/ntpcbus/GetRoute.gz; do
+            echo "== $U"; curl -s -D /tmp/h -o /tmp/b -H "Origin: https://coolalxeanderyi.github.io" "$U" -w "bytes=%{size_download} time=%{time_total}\n"; grep -i -E "^HTTP|access-control|last-modified|content-type|content-encoding" /tmp/h
+            (gunzip -c /tmp/b 2>/dev/null || cat /tmp/b) | head -c 300; echo
+          done
+          echo "== preflight-free GET from browser needs ACAO; OPTIONS test"; curl -s -i -X OPTIONS -H "Origin: https://coolalxeanderyi.github.io" -H "Access-Control-Request-Method: GET" https://tcgbusfs.blob.core.windows.net/ntpcbus/GetEstimateTime.gz | head -12
