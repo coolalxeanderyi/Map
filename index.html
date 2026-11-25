@@ -3,202 +3,249 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>爺爺奶奶的土城生活指南</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
+<meta name="theme-color" content="#0070bd">
+<title>土城生活小幫手</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
 /*
-VOICE: warm, calm, very plain — written like a grandson talking, huge type, nothing small.
-IDEA: Taipei Metro station signage — the 板南線 blue strip with a "you are here" home marker.
-PICTURE: a big line diagram of 板南線 from 頂埔 to 台北車站, home (學府之森) pinned at 海山.
-COLOUR and TYPE: metro blue dominant, white panels, warm signal orange for home/emergency. Noto Sans TC 900/700/400.
-LAYOUT: one column of big sign-like cards, a row of big jump buttons, everything tap-sized.
+VOICE: a patient grandson in your pocket — greets you, tells you the weather, tells you exactly what to do next.
+IDEA: Taipei Metro signage that talks back: blue board, orange "you are here".
+PICTURE: a live map of 土城 with home, the 板南線 stations and where grandma/grandpa is standing right now.
+COLOUR and TYPE: metro blue, white, signal orange for home; Noto Sans TC, huge.
+LAYOUT: smart greeting card → live map → big destination buttons → step-by-step guide that can be read aloud.
 */
-:root{color-scheme:light dark;--bg:light-dark(#f4f7fb,#0c1522);--card:light-dark(#fff,#16233a);--ink:light-dark(#10213a,#eef3fa);--soft:light-dark(#4a5a70,#b7c4d6);--blue:#0070bd;--blue2:light-dark(#e3f0fa,#13314f);--home:#e8590c;--line:light-dark(#d5deea,#2a3b57);--red:#c92a2a}
+:root{color-scheme:light dark;--bg:light-dark(#f4f7fb,#0c1522);--card:light-dark(#fff,#16233a);--ink:light-dark(#10213a,#eef3fa);--soft:light-dark(#4a5a70,#b7c4d6);--blue:#0070bd;--blue2:light-dark(#e3f0fa,#13314f);--home:#e8590c;--line:light-dark(#d5deea,#2a3b57);--fs:20px}
 :root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+:root.xl{--fs:24px}
 *{box-sizing:border-box;min-width:0}
-body{margin:0;background:var(--bg);color:var(--ink);font:20px/1.6 "Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;overflow-x:clip}
-a{color:inherit}
-.wrap{max-width:880px;margin:0 auto;padding:0 max(4vw,14px) 60px}
-header{background:var(--blue);color:#fff;padding:28px max(4vw,14px) 30px}
-header .wrap{padding-bottom:0}
-h1{font-size:clamp(32px,6vw,48px);line-height:1.1;margin:0 0 8px;font-weight:900;text-wrap:balance}
-header p{margin:0;font-size:21px;opacity:.95}
-.jump{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:20px 0 6px}
-.jump a{display:flex;align-items:center;justify-content:center;min-height:64px;background:var(--card);border:2px solid var(--line);border-radius:14px;text-decoration:none;font-weight:700;font-size:21px;text-align:center;padding:6px}
-.jump a.sos{background:var(--red);color:#fff;border-color:var(--red)}
-section{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:22px clamp(16px,3vw,28px);margin-top:22px;scroll-margin-top:12px}
-h2{font-size:clamp(26px,4.6vw,34px);line-height:1.15;margin:0 0 14px;font-weight:900;display:flex;gap:12px;align-items:center}
-h2 .tag{flex:none;width:44px;height:44px;border-radius:50%;background:var(--blue);color:#fff;display:grid;place-items:center;font-size:22px}
-h3{font-size:24px;margin:20px 0 6px}
-p{margin:8px 0}
-.big{font-size:26px;font-weight:700;line-height:1.4}
-.note{color:var(--soft);font-size:18px}
-.box{background:var(--blue2);border-radius:14px;padding:14px 18px;margin:12px 0}
-.home{border-left:8px solid var(--home)}
-.btn{display:inline-flex;align-items:center;justify-content:center;min-height:56px;padding:8px 20px;border-radius:12px;background:var(--blue);color:#fff;text-decoration:none;font-weight:700;font-size:20px;border:0;cursor:pointer;margin:6px 8px 6px 0;font-family:inherit}
-.btn.alt{background:var(--home)}
-.btn:focus-visible,.jump a:focus-visible{outline:4px solid var(--home);outline-offset:3px}
-ul{padding-left:1.2em;margin:8px 0}li{margin:6px 0}
-/* metro line */
-.metro{overflow-x:auto;padding:8px 0 4px}
-.line{position:relative;display:flex;min-width:640px;padding:70px 10px 10px}
-.line::before{content:"";position:absolute;left:24px;right:24px;top:84px;height:14px;background:var(--blue);border-radius:7px}
-.st{flex:1;display:flex;flex-direction:column;align-items:center;position:relative;text-align:center}
-.st i{width:32px;height:32px;border-radius:50%;background:#fff;border:6px solid var(--blue);position:relative;z-index:1}
-.st b{font-size:19px;margin-top:8px;line-height:1.2}
-.st small{font-size:14px;color:var(--soft)}
-.st.me i{border-color:var(--home);width:40px;height:40px;margin-top:-4px}
-.st.me b{color:var(--home);font-size:22px}
-.pin{position:absolute;top:-66px;background:var(--home);color:#fff;font-weight:900;font-size:17px;padding:4px 12px;border-radius:10px;white-space:nowrap}
-.pin::after{content:"";position:absolute;left:50%;bottom:-8px;margin-left:-8px;border:8px solid transparent;border-bottom:0;border-top-color:var(--home)}
-.st.gap i{border-style:dotted;background:transparent}
-.dir{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;margin-top:10px}
-.dir div{border-radius:14px;padding:14px;border:2px solid var(--line)}
-.dir strong{display:block;font-size:22px}
-/* tables as rows */
-.row{display:grid;grid-template-columns:8.5em minmax(0,1fr);gap:10px;padding:12px 0;border-bottom:2px dashed var(--line)}
-.row:last-child{border-bottom:0}
-.row .k{font-weight:700}
-.tel{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
-.tel a{display:block;text-decoration:none;border:3px solid var(--line);border-radius:14px;padding:12px 16px}
-.tel a b{display:block;font-size:40px;line-height:1.1;font-weight:900;color:var(--red)}
-.tel a.fam b{color:var(--blue)}
-/* driver overlay */
-#driver{position:fixed;inset:0;background:#fff;color:#000;z-index:9;display:none;flex-direction:column;justify-content:center;padding:6vw;gap:3vh}
+body{margin:0;background:var(--bg);color:var(--ink);font:var(--fs)/1.6 "Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;overflow-x:clip}
+.wrap{max-width:900px;margin:0 auto;padding:0 max(4vw,12px) 60px}
+header{background:var(--blue);color:#fff;padding:22px max(4vw,12px) 26px}
+h1{font-size:clamp(30px,6vw,46px);line-height:1.1;margin:0 0 6px;font-weight:900}
+#hello{font-size:1.15em;margin:0}
+#tips{margin:14px 0 0;display:grid;gap:8px}
+.tip{background:rgba(255,255,255,.16);border-radius:12px;padding:10px 14px;font-weight:700}
+section{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:18px clamp(14px,3vw,26px);margin-top:18px}
+h2{font-size:1.45em;line-height:1.2;margin:0 0 12px;font-weight:900}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:58px;padding:8px 18px;border-radius:14px;background:var(--blue);color:#fff;text-decoration:none;font-family:inherit;font-weight:700;font-size:1em;line-height:1.25;border:0;cursor:pointer;margin:5px 6px 5px 0;text-align:center}
+.btn.home{background:var(--home)}
+.btn.ghost{background:var(--blue2);color:var(--ink)}
+.btn:focus-visible{outline:4px solid var(--home);outline-offset:3px}
+#map{height:min(58vh,460px);border-radius:14px;border:2px solid var(--line);z-index:0}
+#where{font-size:1.1em;font-weight:700;margin:12px 0 4px;min-height:1.6em}
+.go{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,140px),1fr));gap:10px}
+.go button{min-height:82px;border-radius:16px;border:3px solid var(--line);background:var(--card);color:var(--ink);font-family:inherit;font-weight:900;font-size:1.1em;line-height:1.25;cursor:pointer;padding:8px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.go button small{font-weight:400;font-size:.72em;color:var(--soft)}
+.go button[aria-pressed=true]{border-color:var(--home);background:var(--blue2)}
+#guide[hidden]{display:none}
+ol.steps{list-style:none;padding:0;margin:10px 0;counter-reset:s}
+ol.steps li{counter-increment:s;display:grid;grid-template-columns:52px minmax(0,1fr);gap:12px;padding:12px 0;border-bottom:2px dashed var(--line);align-items:start}
+ol.steps li:last-child{border-bottom:0}
+ol.steps li::before{content:counter(s);width:46px;height:46px;border-radius:50%;background:var(--blue);color:#fff;display:grid;place-items:center;font-weight:900;font-size:1.1em}
+ol.steps li.now::before{background:var(--home)}
+.say{font-size:1.15em;font-weight:700}
+.box{background:var(--blue2);border-radius:14px;padding:12px 16px;margin:10px 0}
+.row{display:grid;grid-template-columns:7.5em minmax(0,1fr);gap:10px;padding:10px 0;border-bottom:2px dashed var(--line)}
+.row:last-child{border-bottom:0}.row b:first-child{white-space:nowrap}
+.note{color:var(--soft);font-size:.85em}
+.tools{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+#driver{position:fixed;inset:0;background:#fff;color:#000;z-index:999;display:none;flex-direction:column;justify-content:center;padding:6vw;gap:3vh}
 #driver.on{display:flex}
 #driver .addr{font-size:clamp(34px,8vw,80px);font-weight:900;line-height:1.25}
-#driver .hint{font-size:clamp(22px,4vw,34px)}
-footer{margin-top:26px;font-size:16px;color:var(--soft)}
-@media(max-width:600px){body{font-size:19px}.row{grid-template-columns:1fr;gap:2px}.dir{grid-template-columns:1fr}}
-@media(prefers-reduced-motion:no-preference){.st.me i{animation:pulse 2s ease-in-out infinite}@keyframes pulse{50%{box-shadow:0 0 0 10px rgba(232,89,12,.25)}}}
+.leaflet-container{font:16px/1.4 "Noto Sans TC",sans-serif}
+.pinlab{background:var(--home);color:#fff;font-weight:900;padding:2px 8px;border-radius:8px;white-space:nowrap;font-size:15px;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+.pinlab.st{background:var(--blue)}.pinlab.me{background:#2b8a3e}.pinlab.pl{background:#5f3dc4}
+@media(max-width:600px){.row{grid-template-columns:1fr;gap:0}}
 </style>
 </head>
 <body>
-<header><div class="wrap">
-<h1>爺爺奶奶的<br>土城生活小幫手</h1>
-<p>我們家：學府之森（土城區學府路）。不知道怎麼走，先看這一頁 👇</p>
+<header><div class="wrap" style="padding-bottom:0">
+<h1 id="hi">爺爺奶奶好！</h1>
+<p id="hello">我是你們的土城小幫手。</p>
+<div id="tips"></div>
 </div></header>
 
 <div class="wrap">
-<nav class="jump" aria-label="快速跳到">
-<a href="#home">🏠 我們家</a>
-<a href="#mrt">🚇 坐捷運</a>
-<a href="#bus">🚌 坐公車</a>
-<a href="#doctor">🏥 看醫生</a>
-<a href="#daily">🛒 買菜散步</a>
-<a href="#card">💳 敬老卡</a>
-</nav>
 
-<section id="home">
-<h2><span class="tag">家</span>我們家的地址</h2>
-<div class="box home">
-<p class="big">學府之森 社區<br>新北市土城區學府路一段98巷30之1號</p>
+<section>
+<h2>📍 我現在在哪裡？</h2>
+<div id="map" aria-label="土城地圖"></div>
+<p id="where">按下面的綠色按鈕，我就知道你在哪裡。</p>
+<button class="btn" id="locate" style="background:#2b8a3e">📍 找我在哪裡</button>
+<button class="btn home" id="goHome">🏠 帶我回家</button>
+<button class="btn ghost" id="showDriver">🚕 給司機看地址</button>
+</section>
+
+<section>
+<h2>🚶 我想去……（按一下）</h2>
+<div class="go" id="go"></div>
+</section>
+
+<section id="guide" hidden aria-live="polite">
+<h2 id="gTitle"></h2>
+<p id="gSub" class="note"></p>
+<ol class="steps" id="gSteps"></ol>
+<div class="tools">
+<button class="btn home" id="speak">🔊 唸給我聽</button>
+<a class="btn" id="gMap" href="#">🗺️ 開 Google 地圖導航</a>
 </div>
-<p>坐計程車的時候，按下面的橘色按鈕，把手機拿給司機看就好。</p>
-<button class="btn alt" id="showDriver" type="button">給司機看地址（大字）</button>
-<a class="btn" href="https://www.google.com/maps/search/?api=1&query=%E6%96%B0%E5%8C%97%E5%B8%82%E5%9C%9F%E5%9F%8E%E5%8D%80%E5%AD%B8%E5%BA%9C%E8%B7%AF%E4%B8%80%E6%AE%B598%E5%B7%B730%E4%B9%8B1%E8%99%9F">在地圖上看家</a>
-<a class="btn" href="https://www.google.com/maps/dir/?api=1&destination=%E6%96%B0%E5%8C%97%E5%B8%82%E5%9C%9F%E5%9F%8E%E5%8D%80%E5%AD%B8%E5%BA%9C%E8%B7%AF%E4%B8%80%E6%AE%B598%E5%B7%B730%E4%B9%8B1%E8%99%9F&travelmode=walking">我迷路了，帶我回家</a>
-<div class="row"><span class="k">最近的捷運</span><span><b>海山站</b>（藍色板南線）。坐計程車約 3 分鐘，走路大約 10～15 分鐘。</span></div>
-<div class="row"><span class="k">最近的公車站</span><span><b>廣福國小</b> 站（學府路上）</span></div>
-<div class="row"><span class="k">認路的地標</span><span>廣福國小（走路約 3 分鐘）、全聯、土城國民運動中心</span></div>
 </section>
 
-<section id="mrt">
-<h2><span class="tag">🚇</span>坐捷運：只要記得「藍色線」</h2>
-<p>我們家附近的捷運都是 <b>藍色的板南線</b>。最近的站是 <b style="color:var(--home)">海山站</b>。</p>
-<div class="metro" role="img" aria-label="板南線路線圖：頂埔、永寧、土城、海山（我們家）、亞東醫院、府中、板橋、一直到西門、台北車站">
-<div class="line" id="line"></div>
-</div>
-<p class="note">（左右滑可以看整條線）</p>
-<div class="dir">
-<div><strong>👉 要去 板橋、台北車站、西門</strong>坐「往 <b>南港展覽館</b>」方向的車</div>
-<div><strong>👈 要去 土城醫院、永寧、頂埔</strong>坐「往 <b>頂埔</b>」方向的車</div>
-</div>
-<h3>常去的地方，坐幾站？（從海山站出發）</h3>
-<div class="row"><span class="k">亞東醫院</span><span>往南港方向坐 <b>1 站</b></span></div>
-<div class="row"><span class="k">板橋</span><span>往南港方向坐 <b>3 站</b>（大遠百、板橋車站）</span></div>
-<div class="row"><span class="k">台北車站</span><span>往南港方向，大約 <b>20 分鐘</b></span></div>
-<div class="row"><span class="k">土城醫院</span><span>往頂埔方向坐 1～2 站，到 <b>土城站</b> 或 <b>永寧站</b>，再坐醫院的免費接駁車（看「看醫生」那一段）</span></div>
-<div class="row"><span class="k">三峽、鶯歌</span><span>坐到最後一站 <b>頂埔</b>，在站裡換 <b>三鶯線</b>（今年新開的），不用出站</span></div>
-<div class="box"><b>小提醒：</b>進站、出站都要刷敬老卡。不確定就問穿制服的站務人員，他們都很樂意幫忙。上下車慢慢來，可以坐博愛座。</div>
+<section>
+<h2>💳 敬老卡（新北，每月 600 點）</h2>
+<p id="cardTip" class="box"></p>
+<div class="row"><b>公車</b><span>半價，再用點數扣</span></div>
+<div class="row"><b>捷運</b><span>每趟最多扣 30 點</span></div>
+<div class="row"><b>敬老計程車</b><span>每趟扣 85 點</span></div>
+<div class="row"><b>台鐵</b><span>每趟最多扣 150 點</span></div>
+<div class="row"><b>運動中心</b><span>每次最多扣 50 點</span></div>
+<div class="row"><b>掛號費</b><span>市立聯合醫院、衛生所扣 50 點</span></div>
+<p class="note">還沒有新北敬老卡：戶籍遷到新北後，到土城區公所（金城路一段101號）辦。</p>
 </section>
 
-<section id="bus">
-<h2><span class="tag">🚌</span>坐公車</h2>
-<p>家附近的公車站叫 <b>「廣福國小」</b>。上車、下車都刷敬老卡。</p>
-<h3>怎麼知道公車什麼時候來？</h3>
-<ul>
-<li>站牌上有電子螢幕，會寫「還有幾分鐘」。</li>
-<li>手機可以用「<b>台北等公車</b>」App，打公車號碼就看得到（請孫子幫忙裝好）。</li>
-<li>或是打 <b>1999</b> 問。</li>
-</ul>
-<h3>捷運站旁邊的公車</h3>
-<div class="row"><span class="k">捷運土城站</span><span>藍17、藍40、706 都有停（出口 1、2 往永寧和三峽方向；出口 3 往板橋、中永和方向）</span></div>
-<div class="row"><span class="k">捷運永寧站</span><span>旁邊有「永寧轉運站」，要去桃園的公車都在這裡坐</span></div>
-<a class="btn" href="https://www.google.com/maps/dir/?api=1&origin=%E6%96%B0%E5%8C%97%E5%B8%82%E5%9C%9F%E5%9F%8E%E5%8D%80%E5%AD%B8%E5%BA%9C%E8%B7%AF%E4%B8%80%E6%AE%B598%E5%B7%B730%E4%B9%8B1%E8%99%9F&travelmode=transit">用地圖查：從家怎麼坐車去某個地方</a>
+<section>
+<h2>⚙️ 設定</h2>
+<button class="btn ghost" id="bigger">🔠 字再大一點</button>
+<button class="btn ghost" id="setHome">🏠 我現在在家，記住這裡</button>
+<p class="note">「記住這裡」請在家裡按一次，地圖上的家就會準確。資料查於 2026 年 11 月。</p>
 </section>
-
-<section id="doctor">
-<h2><span class="tag">🏥</span>看醫生</h2>
-<h3>新北市立土城醫院（長庚醫院經營）</h3>
-<div class="row"><span class="k">地址</span><span>土城區金城路二段6號</span></div>
-<div class="row"><span class="k">怎麼去</span><span>坐捷運到 <b>土城站</b>（1 號或 3 號出口）或 <b>永寧站</b>（4 號出口），外面有<b>醫院免費接駁車</b>，坐大約 10 分鐘。坐計程車也很近。</span></div>
-<div class="row"><span class="k">急診</span><span>24 小時都有</span></div>
-<div class="row"><span class="k">掛號</span><span>用「長庚 e指通」App（請家人幫忙掛）</span></div>
-<a class="btn" href="https://www.google.com/maps/dir/?api=1&origin=%E6%96%B0%E5%8C%97%E5%B8%82%E5%9C%9F%E5%9F%8E%E5%8D%80%E5%AD%B8%E5%BA%9C%E8%B7%AF%E4%B8%80%E6%AE%B598%E5%B7%B730%E4%B9%8B1%E8%99%9F&destination=%E6%96%B0%E5%8C%97%E5%B8%82%E7%AB%8B%E5%9C%9F%E5%9F%8E%E9%86%AB%E9%99%A2&travelmode=transit">從家到土城醫院的路線</a>
-<h3>亞東紀念醫院（板橋）</h3>
-<div class="row"><span class="k">怎麼去</span><span>從海山站往南港方向坐 <b>1 站</b>，在 <b>亞東醫院站</b> 下車，出站就到。</span></div>
-<a class="btn" href="https://www.google.com/maps/dir/?api=1&origin=%E6%96%B0%E5%8C%97%E5%B8%82%E5%9C%9F%E5%9F%8E%E5%8D%80%E5%AD%B8%E5%BA%9C%E8%B7%AF%E4%B8%80%E6%AE%B598%E5%B7%B730%E4%B9%8B1%E8%99%9F&destination=%E4%BA%9E%E6%9D%B1%E7%B4%80%E5%BF%B5%E9%86%AB%E9%99%A2&travelmode=transit">從家到亞東醫院的路線</a>
-<div class="box"><b>看醫生要帶：</b>健保卡、敬老卡、藥袋或藥單、一點現金。</div>
-<p class="note">接駁車班次可能會調整，第一次去之前請先打電話問醫院，或請家人陪同。</p>
-</section>
-
-<section id="daily">
-<h2><span class="tag">🛒</span>買菜、散步、運動</h2>
-<div class="row"><span class="k">全聯 土城學府店</span><span>走路約 <b>5 分鐘</b></span></div>
-<div class="row"><span class="k">學府市場</span><span>傳統市場，走路約 <b>9 分鐘</b></span></div>
-<div class="row"><span class="k">土城國民運動中心</span><span>走路約 <b>6～8 分鐘</b>。可以游泳、運動，有長輩免費時段，平常也能用敬老卡點數</span></div>
-<div class="row"><span class="k">廣福國小</span><span>走路約 3 分鐘，認路的好地標</span></div>
-<a class="btn" href="https://www.google.com/maps/search/?api=1&query=%E5%85%A8%E8%81%AF+%E5%9C%9F%E5%9F%8E%E5%AD%B8%E5%BA%9C%E5%BA%97">全聯在哪裡</a>
-<a class="btn" href="https://www.google.com/maps/search/?api=1&query=%E5%9C%9F%E5%9F%8E%E5%AD%B8%E5%BA%9C%E5%B8%82%E5%A0%B4">學府市場在哪裡</a>
-<a class="btn" href="https://www.google.com/maps/search/?api=1&query=%E5%9C%9F%E5%9F%8E%E5%9C%8B%E6%B0%91%E9%81%8B%E5%8B%95%E4%B8%AD%E5%BF%83">運動中心在哪裡</a>
-</section>
-
-<section id="card">
-<h2><span class="tag">💳</span>新北市敬老卡（65 歲以上）</h2>
-<p class="big">每個月有 600 點，月底沒用完會歸零，要多出門用喔！</p>
-<div class="row"><span class="k">公車</span><span>半價，再用點數扣</span></div>
-<div class="row"><span class="k">捷運</span><span>每趟最多扣 30 點，不夠的從卡裡的錢扣</span></div>
-<div class="row"><span class="k">敬老愛心計程車</span><span>每趟扣 85 點，其餘付卡裡的錢</span></div>
-<div class="row"><span class="k">台鐵</span><span>每趟最多扣 150 點</span></div>
-<div class="row"><span class="k">運動中心</span><span>每次最多扣 50 點</span></div>
-<div class="row"><span class="k">掛號費</span><span>新北市立聯合醫院、各區衛生所，扣 50 點</span></div>
-<div class="box"><b>還沒有新北的敬老卡？</b>戶籍要遷到新北市才能辦。可以到 <b>土城區公所</b>（金城路一段101號，電話 02-2273-2000）問。遷戶籍到 <b>土城戶政事務所</b>（和平路28號）。</div>
-<p class="note">卡裡的「儲值金」要另外加值，在捷運站或超商都可以加。</p>
-</section>
-
-
-<footer>家人整理・資料查於 2026 年 11 月。班次與規定可能會變，有疑問請打 1999 或問家人。</footer>
 </div>
 
 <div id="driver" role="dialog" aria-label="給司機看的地址">
-<div class="hint">司機您好，請載我到：</div>
+<div style="font-size:clamp(22px,4vw,34px)">司機您好，請載我到：</div>
 <div class="addr">新北市土城區<br>學府路一段98巷<br>30之1號<br>（學府之森）</div>
-<button class="btn" id="closeDriver" type="button" style="align-self:flex-start;font-size:26px;min-height:70px">關閉</button>
+<button class="btn" id="closeDriver" style="align-self:flex-start;font-size:26px;min-height:70px">關閉</button>
 </div>
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 {
-const stations=[["頂埔","BL01"],["永寧","BL02"],["土城","BL03"],["海山","BL04",1],["亞東醫院","BL05"],["府中","BL06"],["板橋","BL07"],["…","",0,1],["西門","BL11"],["台北車站","BL12"]];
-const line=document.getElementById('line');
-line.innerHTML=stations.map(([n,c,me,gap])=>`<div class="st${me?' me':''}${gap?' gap':''}">${me?'<span class="pin">🏠 我們家這站</span>':''}<i></i><b>${n}</b><small>${c}</small></div>`).join('');
+const ADDR='新北市土城區學府路一段98巷30之1號';
+const $=id=>document.getElementById(id);
+const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+// 板南線（座標取自 OpenStreetMap）
+const ST=[["頂埔",24.9593,121.4196],["永寧",24.9668,121.4361],["土城",24.97318,121.44439],["海山",24.98532,121.44879],["亞東醫院",24.9986,121.4526],["府中",25.00855,121.45918],["板橋",25.0138,121.4624]];
+const dist=(a,b,c,d)=>{const R=6371e3,r=Math.PI/180,x=(c-a)*r,y=(d-b)*r*Math.cos((a+c)/2*r);return Math.round(R*Math.hypot(x,y))};
+const nice=m=>m<1000?`${m} 公尺`:`${(m/1000).toFixed(1)} 公里`;
+const walk=m=>Math.max(1,Math.round(m/60));// 長輩約每分鐘 60 公尺
+const gmap=(dest,mode)=>`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(dest)}&travelmode=${mode}`;
+
+// ---------- 打招呼 + 聰明提醒 ----------
+const now=new Date(),h=now.getHours(),wd='日一二三四五六'[now.getDay()];
+$('hi').textContent=(h<11?'早安':h<14?'午安':h<18?'午安':'晚安')+'，爺爺奶奶！';
+$('hello').textContent=`今天是 ${now.getMonth()+1} 月 ${now.getDate()} 日，星期${wd}，現在 ${h} 點 ${String(now.getMinutes()).padStart(2,'0')} 分。`;
+const tips=[];
+if(h>=23||h<6)tips.push('🌙 現在很晚了，捷運大約半夜 12 點就停，要出門請坐計程車，或找家人。');
+else if(h>=7&&h<9||h>=17&&h<19)tips.push('🚇 現在是上下班時間，捷運人很多，不急的話晚一點再出門比較好坐。');
+const last=new Date(now.getFullYear(),now.getMonth()+1,0).getDate(),left=last-now.getDate();
+$('cardTip').textContent=left<=4?`⚠️ 這個月只剩 ${left+1} 天！敬老卡點數月底會歸零，記得多出門用掉。`:'點數每個月 1 號重新給，月底沒用完會歸零，要多出門走走喔！';
+if(left<=4)tips.push(`💳 敬老卡點數再 ${left+1} 天就歸零，今天可以去運動中心或坐車出去走走。`);
+const showTips=()=>{$('tips').innerHTML=tips.map(t=>`<div class="tip">${esc(t)}</div>`).join('')};
+showTips();
+// 天氣（Open-Meteo，免費）
+fetch('https://api.open-meteo.com/v1/forecast?latitude=24.99&longitude=121.45&current=temperature_2m,precipitation&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FTaipei&forecast_days=1')
+.then(r=>r.json()).then(w=>{
+ const t=Math.round(w.current.temperature_2m),lo=Math.round(w.daily.temperature_2m_min[0]),hi=Math.round(w.daily.temperature_2m_max[0]),rain=w.daily.precipitation_probability_max[0];
+ let s=`🌤️ 土城現在 ${t} 度（今天 ${lo}～${hi} 度）。`;
+ if(rain>=50)s+=` 下雨機率 ${rain}%，出門記得帶傘☂️，地板滑要小心走。`;
+ if(lo<=15)s+=' 天氣冷，要穿外套、戴帽子🧣。';
+ if(hi>=32)s+=' 很熱，記得喝水、避開中午出門。';
+ tips.unshift(s);showTips();
+}).catch(()=>{});
+
+// ---------- 地圖 ----------
+const HAS=!!window.L;const map=HAS?L.map('map').setView([24.982,121.448],14):{setView(){},removeLayer(){},invalidateSize(){}};
+if(HAS)L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
+else $('map').innerHTML='<p style="padding:20px">地圖暫時打不開，其他功能都可以照常用。</p>';
+const label=(lat,lng,text,cls)=>HAS?L.marker([lat,lng],{icon:L.divIcon({className:'',html:`<span class="pinlab ${cls}">${esc(text)}</span>`,iconSize:null,iconAnchor:[0,12]})}).addTo(map):null;
+if(HAS){L.polyline(ST.map(s=>[s[1],s[2]]),{color:'#0070bd',weight:7,opacity:.8}).addTo(map);
+ST.forEach(s=>{L.circleMarker([s[1],s[2]],{radius:8,color:'#0070bd',fillColor:'#fff',fillOpacity:1,weight:4}).addTo(map);label(s[1],s[2],'🚇 '+s[0]+'站','st')})}
+
+let home=store.get('home',null),homeMk=null;
+const drawHome=()=>{if(!home)return;if(homeMk&&HAS)map.removeLayer(homeMk);homeMk=label(home[0],home[1],'🏠 我們家','');};
+// 地點自動找位置（OpenStreetMap 地名搜尋，結果記在手機裡）
+const geo=async q=>{const c=store.get('geo:'+q,null);if(c)return c;
+ try{const r=await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=tw&q='+encodeURIComponent(q));const j=await r.json();if(j[0]){const v=[+j[0].lat,+j[0].lon];store.set('geo:'+q,v);return v}}catch(e){}return null};
 
 
-const d=document.getElementById('driver');
-document.getElementById('showDriver').addEventListener('click',()=>d.classList.add('on'));
-document.getElementById('closeDriver').addEventListener('click',()=>d.classList.remove('on'));
-document.addEventListener('keydown',e=>{if(e.key==='Escape')d.classList.remove('on')});
+// ---------- 我在哪裡 ----------
+let me=null,meMk=null;
+const nearest=(a,b)=>ST.map(s=>({n:s[0],d:dist(a,b,s[1],s[2])})).sort((x,y)=>x.d-y.d)[0];
+const describe=()=>{
+ if(!me)return;
+ const n=nearest(me[0],me[1]);let s=`最近的捷運站是「${n.n}站」，大約 ${nice(n.d)}（走路約 ${walk(n.d)} 分鐘）。`;
+ if(home){const d=dist(me[0],me[1],home[0],home[1]);s=d<80?'🏠 你現在就在家附近！'+s:`離家 ${nice(d)}。`+s;if(d>1500)s+=' 有點遠了，回家建議坐捷運到海山站，或坐計程車。'}
+ $('where').textContent=s;return s};
+$('locate').addEventListener('click',()=>{
+ if(!navigator.geolocation){$('where').textContent='這支手機沒辦法定位，請問路人或打給家人。';return}
+ $('where').textContent='找你的位置中，請等一下……';
+ navigator.geolocation.getCurrentPosition(p=>{
+  me=[p.coords.latitude,p.coords.longitude];
+  if(meMk&&HAS)map.removeLayer(meMk);meMk=label(me[0],me[1],'🙋 我在這裡','me');
+  map.setView(me,16);const s=describe();speak(s);
+ },()=>{$('where').textContent='找不到位置。請在手機設定裡打開「定位」，再按一次。'},{enableHighAccuracy:true,timeout:15000});
+});
+$('goHome').addEventListener('click',()=>{location.href=gmap(ADDR,me&&home&&dist(me[0],me[1],home[0],home[1])<1500?'walking':'transit')});
+$('setHome').addEventListener('click',()=>{
+ navigator.geolocation&&navigator.geolocation.getCurrentPosition(p=>{home=[p.coords.latitude,p.coords.longitude];store.set('home',home);drawHome();map.setView(home,16);$('where').textContent='好的！已經記住我們家的位置了。';speak('好的，已經記住我們家的位置了')},()=>{$('where').textContent='找不到位置，請打開手機的定位再試一次。'},{enableHighAccuracy:true,timeout:15000})});
+
+// ---------- 目的地與步驟 ----------
+const MRT_WALK='從家走到「海山站」（走路大約 10～15 分鐘，坐計程車約 3 分鐘）。';
+const IN='進站時把敬老卡放在閘門上「嗶」一聲。';
+const PLACES=[
+ {id:'tpe',icon:'🚉',name:'台北車站',short:'台北車站',sub:'約 20 分鐘',dest:'台北車站',mode:'transit',steps:[MRT_WALK,IN,'下樓看「往 南港展覽館」的牌子，在那邊等車。','坐大約 20 分鐘，聽到廣播「台北車站」就下車。','下車後跟著「出口」的牌子走，不知道就問穿制服的站務人員。']},
+ {id:'bq',icon:'🏬',name:'板橋（大遠百、板橋車站）',short:'板橋',sub:'坐 3 站',dest:'捷運板橋站',mode:'transit',steps:[MRT_WALK,IN,'坐「往 南港展覽館」方向的車。','坐 3 站：亞東醫院 → 府中 → 板橋，在「板橋站」下車。']},
+ {id:'ximen',icon:'🛍️',name:'西門町',short:'西門',sub:'約 20 分鐘',dest:'捷運西門站',mode:'transit',steps:[MRT_WALK,IN,'坐「往 南港展覽館」方向的車。','聽到「西門」就下車（在台北車站前一站）。']},
+ {id:'fe',icon:'🏥',name:'亞東醫院',short:'亞東醫院',sub:'坐 1 站',dest:'亞東紀念醫院',mode:'transit',steps:['帶好健保卡、敬老卡、藥袋。',MRT_WALK,IN,'坐「往 南港展覽館」方向，只要坐 1 站。','在「亞東醫院站」下車，出站就到醫院。']},
+ {id:'tch',icon:'🏥',name:'土城醫院（長庚）',short:'土城醫院',sub:'坐 1 站＋接駁車',dest:'新北市立土城醫院',mode:'transit',q:'新北市立土城醫院',steps:['帶好健保卡、敬老卡、藥袋。',MRT_WALK,IN,'坐「往 頂埔」方向，坐 1 站到「土城站」下車。','從 1 號或 3 號出口出去，坐醫院的免費接駁車，大約 10 分鐘。','身體不舒服、走不動，就直接坐計程車去比較快。'],note:'接駁車班次可能會調整，第一次去先問醫院或請家人陪。'},
+ {id:'px',icon:'🛒',name:'全聯（學府店）',short:'全聯',sub:'走路約 5 分鐘',dest:'全聯福利中心 土城學府店',mode:'walking',q:'全聯 土城學府',steps:['從家出門，走路大約 5 分鐘。','記得帶購物袋和錢包。','東西太重拿不動，可以請店員幫忙，或分兩次買。']},
+ {id:'mkt',icon:'🥬',name:'學府市場（買菜）',short:'學府市場',sub:'走路約 9 分鐘',dest:'土城學府市場',mode:'walking',q:'學府市場 土城',steps:['從家出門，走路大約 9 分鐘。','傳統市場早上東西最多最新鮮。','地上常常濕濕的，走路要慢慢走。']},
+ {id:'gym',icon:'🏊',name:'國民運動中心',short:'運動中心',sub:'走路約 6～8 分鐘',dest:'土城國民運動中心',mode:'walking',q:'土城國民運動中心',steps:['從家出門，走路大約 6～8 分鐘。','帶敬老卡，可以用點數付入場費；也有長輩免費的時段，可以問櫃台。','運動前先暖身，累了就休息。']},
+ {id:'sx',icon:'⛩️',name:'三峽、鶯歌老街',short:'三峽鶯歌',sub:'換三鶯線',dest:'三峽老街',mode:'transit',steps:[MRT_WALK,IN,'坐「往 頂埔」方向，坐到最後一站「頂埔站」。','在站裡跟著「三鶯線」的牌子走去轉車，不用出站。','三峽坐到「台北大學」一帶；鶯歌坐到「鶯歌」相關站，聽廣播下車。']},
+ {id:'home',icon:'🏠',name:'回家',short:'回家',sub:'學府之森',dest:ADDR,mode:'transit',steps:['坐捷運回到「海山站」下車（從板橋、台北來的人坐「往 頂埔」方向）。','從海山站走回家，大約 10～15 分鐘；累了就坐計程車，按「給司機看地址」。','迷路了就按最上面的「找我在哪裡」，再按「帶我回家」。']}
+];
+(async()=>{
+ if(!home){const g=await geo('新北市土城區學府路一段98巷');if(g&&dist(g[0],g[1],24.9853,121.4488)<2500){home=g;store.set('home',g)}}
+ drawHome();
+ for(const p of PLACES.filter(p=>p.q)){const g=await geo(p.q);if(g&&dist(g[0],g[1],24.98,121.45)<5000){p.pos=g;label(g[0],g[1],p.icon+' '+p.short,'pl')}await new Promise(r=>setTimeout(r,1100))}
+})();
+$('go').innerHTML=PLACES.map(p=>`<button data-id="${p.id}" aria-pressed="false"><span>${p.icon} ${esc(p.short)}</span><small>${esc(p.sub)}</small></button>`).join('');
+let cur=null;
+const open=id=>{
+ cur=PLACES.find(p=>p.id===id);
+ document.querySelectorAll('#go button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.id===id));
+ let steps=cur.steps.slice();
+ // 聰明：如果知道你在哪裡、又不在家附近，第一步改成從現在的位置出發
+ if(me&&home&&dist(me[0],me[1],home[0],home[1])>500&&cur.mode==='transit'&&id!=='home'){const n=nearest(me[0],me[1]);steps=steps.map(s=>s===MRT_WALK?`你現在離「${n.n}站」最近（約 ${nice(n.d)}），先走到「${n.n}站」。`:s)}
+ if((h>=23||h<6)&&cur.mode==='transit')steps.unshift('⚠️ 現在很晚，捷運可能已經停了，建議坐計程車。');
+ $('gTitle').textContent=`${cur.icon} 去${cur.name}`;
+ $('gSub').textContent=cur.note||'照著下面一步一步做就好，不懂就問人，不用怕。';
+ $('gSteps').innerHTML=steps.map(s=>`<li><span class="say">${esc(s)}</span></li>`).join('');
+ $('gMap').href=gmap(cur.dest,cur.mode);
+ $('guide').hidden=false;$('guide').scrollIntoView({behavior:'smooth',block:'start'});
+ if(cur.pos)map.setView(cur.pos,15);
+};
+$('go').addEventListener('click',e=>{const b=e.target.closest('button');if(b)open(b.dataset.id)});
+
+// ---------- 唸出來 ----------
+let voice=null;const pick=()=>{const vs=speechSynthesis.getVoices();voice=vs.find(v=>/zh[-_]TW/i.test(v.lang))||vs.find(v=>/^zh/i.test(v.lang))||null};
+if('speechSynthesis' in window){pick();speechSynthesis.onvoiceschanged=pick}
+function speak(text){if(!('speechSynthesis' in window))return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='zh-TW';u.rate=.85;if(voice)u.voice=voice;speechSynthesis.speak(u)}
+$('speak').addEventListener('click',()=>{
+ const items=[...document.querySelectorAll('#gSteps li')];if(!items.length)return;
+ speechSynthesis.cancel();
+ items.forEach((li,i)=>{const u=new SpeechSynthesisUtterance(`第${i+1}步，${li.textContent}`);u.lang='zh-TW';u.rate=.85;if(voice)u.voice=voice;u.onstart=()=>{items.forEach(x=>x.classList.remove('now'));li.classList.add('now')};speechSynthesis.speak(u)});
+});
+
+// ---------- 其他 ----------
+if(store.get('xl',false))document.documentElement.classList.add('xl');
+$('bigger').addEventListener('click',()=>{const on=document.documentElement.classList.toggle('xl');store.set('xl',on);$('bigger').textContent=on?'🔡 字小一點':'🔠 字再大一點';setTimeout(()=>map.invalidateSize(),50)});
+const d=$('driver');
+$('showDriver').addEventListener('click',()=>d.classList.add('on'));
+$('closeDriver').addEventListener('click',()=>d.classList.remove('on'));
 }
 </script>
 </body>
