@@ -75,6 +75,21 @@ label.big{display:block;font-size:23px;font-weight:900;margin-bottom:10px}
 .er .no{background:var(--mint);color:#fff;font-weight:900;font-size:24px;border-radius:14px;padding:4px 12px;min-width:76px;text-align:center}
 .er .to{font-size:19px;line-height:1.3}.er .to small{display:block;color:var(--soft);font-size:15px}
 .er .t{font-weight:900;font-size:24px;white-space:nowrap;text-align:right}.er .t.soon{color:#fff;background:var(--hot);border-radius:12px;padding:2px 10px}.er .t.off{color:var(--soft);font-size:17px}
+.homebtn{margin-left:auto;flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;width:72px;height:72px;border-radius:22px;border:3px solid #fff;background:#ffb547;color:#4a2a00;font-family:inherit;font-size:28px;line-height:1;cursor:pointer;box-shadow:0 4px 0 #e0902a}
+.homebtn span{font-size:17px;font-weight:900;margin-top:2px}
+.homebtn:active{transform:translateY(3px);box-shadow:none}
+#driver{position:fixed;inset:0;z-index:50;background:#fffdf7;color:#000;display:flex;flex-direction:column;justify-content:center;padding:6vw;gap:2vh}
+#driver[hidden]{display:none!important}
+#driver .dhint{font-size:clamp(22px,5vw,34px);margin:0}
+#driver .addr{font-size:clamp(36px,9vw,80px);font-weight:900;line-height:1.25;margin:0}
+#driver .addr span{font-size:.7em}
+#driver .btn{font-size:22px;min-height:66px}
+#offline{position:fixed;left:10px;right:10px;bottom:10px;z-index:40;background:#3d3030;color:#fff;border-radius:16px;padding:12px 16px;font-weight:700;font-size:18px;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+#offline[hidden]{display:none!important}
+.direct{border-radius:20px;background:var(--mint2);border:4px solid var(--mint);padding:12px 16px;margin:10px 0}
+.direct .no{display:inline-block;background:var(--mint);color:#fff;font-weight:900;font-size:24px;border-radius:12px;padding:0 12px;margin-right:6px}
+.direct .live{display:inline-block;margin-top:6px;font-weight:900;background:#fff;border-radius:999px;padding:2px 12px}
+.direct .live.soon{background:var(--hot);color:#fff}
 </style>
 </head>
 <body>
@@ -86,7 +101,7 @@ label.big{display:block;font-size:23px;font-weight:900;margin-bottom:10px}
 <rect x="52" y="9" width="9" height="10" rx="3" fill="#2f7fbf"/></g>
 <circle cx="22" cy="56" r="6" fill="#20466b"/><circle cx="56" cy="56" r="6" fill="#20466b"/><circle cx="22" cy="56" r="2" fill="#fff"/><circle cx="56" cy="56" r="2" fill="#fff"/>
 <path class="puff" d="M62 6c-2-3-6 0-3 3l3 3 3-3c3-3-1-6-3-3z" fill="#ff7a8a"/><path class="puff b" d="M68 2c-1.6-2.4-4.8 0-2.4 2.4l2.4 2.4 2.4-2.4c2.4-2.4-.8-4.8-2.4-2.4z" fill="#ff7a8a"/>
-</svg><h1>爺爺奶奶的土城小幫手<small>今天想去哪裡、吃什麼呀？</small></h1></div>
+</svg><h1>爺爺奶奶的土城小幫手<small>今天想去哪裡、吃什麼呀？</small></h1><button class="homebtn" id="homeBtn" type="button">🚕<span>回家</span></button></div>
 <div class="tabs" role="tablist">
 <button role="tab" id="tab-go" aria-selected="true" aria-controls="p-go">🚇 交通</button>
 <button role="tab" id="tab-food" aria-selected="false" aria-controls="p-food">🍜 美食</button>
@@ -124,6 +139,12 @@ label.big{display:block;font-size:23px;font-weight:900;margin-bottom:10px}
 </div>
 </div>
 
+<div id="driver" role="dialog" aria-modal="true" aria-label="給司機看的地址" hidden>
+<p class="dhint">司機您好，請載我到：</p>
+<p class="addr">新北市土城區<br>學府路一段98巷<br>30之1號<br><span>（學府之森）</span></p>
+<div class="dbtns"><a class="btn" id="navHome" href="#">🗺️ 我自己走回家（導航）</a><button class="btn hot" id="closeDriver" type="button">關閉</button></div>
+</div>
+<div id="offline" hidden>📵 現在沒有網路：公車時間、查新地方暫時不能用，其他都可以看。</div>
 <script>
 {
 const $=id=>document.getElementById(id);
@@ -131,6 +152,17 @@ const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'
 const HOME='新北市土城區學府路一段98巷30之1號';
 const gdir=(d,m)=>`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(HOME)}&destination=${encodeURIComponent(d)}&travelmode=${m}`;
 const gsearch=q=>`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
+
+/* ---------- 回家：大字地址給司機看 ---------- */
+const drv=$('driver');
+$('homeBtn').addEventListener('click',()=>{drv.hidden=false;$('closeDriver').focus()});
+$('closeDriver').addEventListener('click',()=>{drv.hidden=true});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')drv.hidden=true});
+$('navHome').href=`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(HOME)}&travelmode=walking`;
+/* ---------- 沒網路時的提示 + 離線也能開 ---------- */
+const net=()=>{$('offline').hidden=navigator.onLine};
+addEventListener('online',()=>{net();loadBus&&loadBus()});addEventListener('offline',net);net();
+if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
 
 /* ---------- 分頁 ---------- */
 const tabs=[['tab-go','p-go'],['tab-food','p-food']];
@@ -284,9 +316,19 @@ async function go(){
  }
  // ---- 公車 ----
  h+='<h3 style="margin-top:18px">🚌 公車怎麼坐</h3>';
+ const dpos=r.found?[r.found.lat,r.found.lon]:(learned()[q]&&learned()[q].lat?[learned()[q].lat,learned()[q].lon]:(r.st&&POS[r.st]));
+ const direct=(r.dest==='回家'||r.dest==='家')?[]:await directBus(dpos);
+ if(direct.length){
+  h+='<p class="sum">🎉 家門口就有公車直達，不用轉車！</p>';
+  direct.forEach(d=>{const [t,c]=etaText(d.sec);
+   h+=`<div class="direct"><span class="no">${esc(d.route)}</span>在「${esc(d.stop)}」站牌坐「往 ${esc(d.to)}」方向<br>坐 <b>${d.n}</b> 站（大約 ${Math.round(d.n*1.6/5)*5||5} 分鐘），到「${esc(d.alight)}」下車${d.walk>80?`，再走約 ${Math.max(1,Math.round(d.walk/60))} 分鐘`:''}<br><span class="live ${c}">⏱️ 現在：${esc(t)}</span></div>`;
+   speakText+=`公車也可以。在${d.stop}站牌坐${d.route}，往${d.to}方向，坐${d.n}站，到${d.alight}下車。現在${t}。`;
+  });
+  h+='<p class="note">「現在」是公車多久會到站牌，打開時抓的即時資料。</p>';
+ }
  const bus=r.st&&BUS[r.st];
  if(bus){h+=`<div class="bus">${bus}</div>`}
- h+=`<div class="bus">按下面綠色按鈕，地圖會列出<b>幾號公車、在哪一站坐、幾分鐘後來</b>，照著坐就好。上下車都刷敬老卡（公車半價再扣點數）。</div>`;
+ h+=`<div class="bus">${direct.length?'想看其他公車走法，':''}按下面綠色按鈕，地圖會列出<b>幾號公車、在哪一站坐、幾分鐘後來</b>，照著坐就好。上下車都刷敬老卡（公車半價再扣點數）。</div>`;
  h+=`<a class="btn" style="background:var(--ok)" href="${gdir(r.dest==='回家'||r.dest==='家'?HOME:r.dest,'transit')}">🗺️ 看公車怎麼坐（開地圖）</a>`;
  h+=`<button class="btn hot" type="button" id="say">🔊 唸給我聽</button>`;
  box.innerHTML=h;box.hidden=false;box.scrollIntoView({behavior:'smooth',block:'start'});
@@ -333,9 +375,9 @@ async function gunzipJSON(url){
  return JSON.parse(txt.replace(/^﻿/,''));
 }
 async function loadStops(){
- try{const c=JSON.parse(localStorage.getItem('stopsInfo')||'null');if(c&&Date.now()-c.at<864e5){stopsInfo=c.d;return}}catch(e){}
+ try{const c=JSON.parse(localStorage.getItem('stopsInfo2')||'null');if(c&&Date.now()-c.at<864e5){stopsInfo=c.d;return}}catch(e){}
  const r=await fetch(STOPS_URL+'?d='+new Date().toISOString().slice(0,10));stopsInfo=await r.json();
- try{localStorage.setItem('stopsInfo',JSON.stringify({at:Date.now(),d:stopsInfo}))}catch(e){}
+ try{localStorage.setItem('stopsInfo2',JSON.stringify({at:Date.now(),d:stopsInfo}))}catch(e){}
 }
 function etaText(sec){
  if(sec==null||isNaN(sec))return['沒有資料','off'];
@@ -370,6 +412,25 @@ async function loadBus(){
   });
   etaMap=m;etaTime=t||Date.now();etaFail=false;drawEta();
  }catch(e){etaFail=true;if(stopsInfo)drawEta();else $('eta').innerHTML='<p>公車資料暫時讀不到，可以先按下面的「看公車怎麼坐」用地圖查。</p>'}
+}
+// 家門口（廣福國小、廣福里）的公車，有沒有經過目的地附近？
+async function directBus(dpos){
+ if(!dpos)return[];
+ try{if(!stopsInfo)await loadStops();if(!Object.keys(etaMap).length)await loadBus()}catch(e){}
+ if(!stopsInfo||!stopsInfo.lines)return[];
+ const best={};
+ for(const [stop,list] of Object.entries(stopsInfo.stops))for(const x of list){
+  const line=stopsInfo.lines[x.src+'|'+x.rid+'|'+x.gb];if(!line)continue;
+  const i=line.findIndex(z=>z[0]===stop);if(i<0)continue;
+  for(let j=i+1;j<line.length;j++){const [n,la,lo]=line[j];if(la==null)continue;
+   const d=km(dpos[0],dpos[1],la,lo)*1000;if(d>700)continue;
+   const v=etaMap[x.src+'|'+x.sid];let sec=v==null?null:+v;if(sec>0&&etaTime)sec=Math.max(0,sec-(Date.now()-etaTime)/1000);
+   const c={route:x.route,to:x.to,stop,alight:n,n:j-i,walk:Math.round(d),sec};
+   const k=x.route+'|'+x.to,o=best[k];
+   if(!o||c.walk+c.n*60<o.walk+o.n*60)best[k]=c;
+  }
+ }
+ return Object.values(best).sort((a,b)=>(a.walk+a.n*60)-(b.walk+b.n*60)).slice(0,3);
 }
 $('stops').addEventListener('click',e=>{const b=e.target.closest('button');if(b){curStop=b.dataset.s;drawEta()}});
 loadBus();setInterval(()=>{if(!document.hidden)loadBus()},30000);
