@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#8fd0ff">
+<meta name="referrer" content="no-referrer">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="icon" href="icon-192.png" type="image/png" sizes="192x192">
 <link rel="apple-touch-icon" href="icon-180.png">
@@ -198,7 +199,7 @@ label.big{display:block;font-size:23px;font-weight:900;margin-bottom:10px}
 <div id="driver" role="dialog" aria-modal="true" aria-label="給司機看的地址" hidden>
 <p class="dhint">司機您好，請載我到：</p>
 <p class="addr" id="drvAddr"></p>
-<div class="dbtns"><a class="btn" id="navHome" href="#">🗺️ 我自己走回家（導航）</a><button class="btn ghost" id="drvSet" type="button" hidden>⚙️ 設定地址</button><button class="btn" id="drvBus" type="button" style="background:var(--mint)">🚌 公交回家</button><button class="btn hot" id="closeDriver" type="button">關閉</button></div>
+<div class="dbtns"><a class="btn" id="navHome" href="#">🗺️ 我自己走回家（導航）</a><button class="btn ghost" id="drvSet" type="button" hidden>⚙️ 設定地址</button><button class="btn hot" id="drvSay" type="button">🔊 唸給司機聽</button><button class="btn" id="drvBus" type="button" style="background:var(--mint)">🚌 公交回家</button><button class="btn hot" id="closeDriver" type="button">關閉</button></div>
 </div>
 <div id="toast" role="status"></div>
 <div class="sheet" id="setup" role="dialog" aria-modal="true" aria-labelledby="setupT" hidden><div class="sheetIn">
@@ -247,13 +248,15 @@ const drv=$('driver');
 function drawHome(){
  const a=HOME();
  $('drvAddr').innerHTML=a?esc(a).replace(/(區|路|段|巷|弄)/g,'$1<br>').replace(/(<br>)+$/,'')+(ME.label?`<br><span>（${esc(ME.label)}）</span>`:''):'<span>還沒設定家裡地址</span>';
- $('navHome').hidden=!a;$('drvSet').hidden=!!a;
+ $('navHome').hidden=!a;$('drvSet').hidden=!!a;$('drvSay').hidden=!a;
  if(a)$('navHome').href=`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(a)}&travelmode=walking`;
  $('famRow').innerHTML=(ME.fam||[]).filter(f=>f.t).map(f=>`<a href="tel:${esc(f.t.replace(/[^\d+]/g,''))}">📞<span>打給${esc(f.n||'家人')}<small>${esc(f.t)}</small></span></a>`).join('');
 }
 drawHome();
 $('homeBtn').addEventListener('click',()=>{drv.hidden=false;$('closeDriver').focus()});
 $('drvSet').addEventListener('click',()=>{drv.hidden=true;openSetup()});
+$('drvSay').addEventListener('click',e=>{const a=HOME();if(!a){toast('還沒設定家裡地址');return}speak(`司機您好，請載我到${a}${ME.label?'，'+ME.label:''}。謝謝！`,e.currentTarget)});
+$('closeDriver').addEventListener('click',()=>stop());
 function openSetup(){
  $('sAddr').value=ME.addr||'';$('sLabel').value=ME.label||'';
  const f=(ME.fam||[]).concat([{},{},{}]).slice(0,3);
@@ -450,8 +453,8 @@ const remember=(q,v)=>{try{const m=learned();m[q]=v;localStorage.setItem(LKEY,JS
 async function lookup(q){
  const near='&viewbox=121.2,25.3,121.8,24.85';
  const tries=[
-  async()=>{const r=await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=tw&accept-language=zh-TW'+near+'&q='+encodeURIComponent(q));const j=await r.json();return j[0]&&{lat:+j[0].lat,lon:+j[0].lon,name:j[0].name||q,addr:j[0].display_name}},
-  async()=>{const r=await fetch('https://photon.komoot.io/api/?limit=1&lat=25.03&lon=121.52&q='+encodeURIComponent(q));const j=await r.json();const f=j.features&&j.features[0];return f&&{lat:f.geometry.coordinates[1],lon:f.geometry.coordinates[0],name:f.properties.name||q,addr:[f.properties.city,f.properties.district,f.properties.street].filter(Boolean).join(' ')}}
+  async()=>{const r=await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=tw&accept-language=zh-TW'+near+'&q='+encodeURIComponent(q),{referrerPolicy:'strict-origin-when-cross-origin'});const j=await r.json();return j[0]&&{lat:+j[0].lat,lon:+j[0].lon,name:j[0].name||q,addr:j[0].display_name}},
+  async()=>{const r=await fetch('https://photon.komoot.io/api/?limit=1&lat=25.03&lon=121.52&q='+encodeURIComponent(q),{referrerPolicy:'strict-origin-when-cross-origin'});const j=await r.json();const f=j.features&&j.features[0];return f&&{lat:f.geometry.coordinates[1],lon:f.geometry.coordinates[0],name:f.properties.name||q,addr:[f.properties.city,f.properties.district,f.properties.street].filter(Boolean).join(' ')}}
  ];
  for(const t of tries){try{const v=await t();if(v&&km(v.lat,v.lon,25.03,121.52)<120)return v}catch(e){}}
  return null;
@@ -559,10 +562,11 @@ function next(){if(!queue.length){setBtn(false);return}const t=queue.shift();aud
 audio.addEventListener('ended',next);
 audio.addEventListener('error',()=>{if(playing)fallback(audio.src?decodeURIComponent(audio.src.split('&q=')[1]||''):'')});
 // 備用：手機內建語音（優先挑 Google 的中文聲音）
-let voice=null;const pick=()=>{const vs=speechSynthesis.getVoices(),zh=vs.filter(v=>/zh[-_](TW|Hant)/i.test(v.lang)||/國語|臺灣|台灣/.test(v.name));voice=zh.find(v=>/google/i.test(v.name))||zh.find(v=>/美佳|Mei-?Jia|Meijia/i.test(v.name))||zh[0]||vs.find(v=>/^zh/i.test(v.lang))||null};
+let voice=null;const pick=()=>{const vs=speechSynthesis.getVoices(),zh=vs.filter(v=>/zh[-_](TW|Hant)/i.test(v.lang)||/國語|臺灣|台灣/.test(v.name));voice=zh.find(v=>/google/i.test(v.name))||zh.find(v=>/美佳|Mei-?Jia|Meijia/i.test(v.name))||zh[0]||vs.find(v=>/^(zh|cmn|yue)/i.test(v.lang))||null};
 if('speechSynthesis' in window){pick();speechSynthesis.onvoiceschanged=pick}
 function fallback(first){
- if(!('speechSynthesis' in window)){setBtn(false);return}
+ if(!('speechSynthesis' in window)){setBtn(false);toast('這台裝置不能唸出聲音');return}
+ pick();if(!voice){queue=[];setBtn(false);toast('Google 語音連不上，這台裝置也沒有中文語音，請改用看的');return}
  const rest=(first?[first]:[]).concat(queue);queue=[];speechSynthesis.cancel();
  rest.forEach((t,i)=>{const u=new SpeechSynthesisUtterance(t);u.lang='zh-TW';u.rate=.95;if(voice)u.voice=voice;if(i===rest.length-1)u.onend=()=>setBtn(false);speechSynthesis.speak(u)});
 }
