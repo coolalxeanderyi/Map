@@ -1,0 +1,17 @@
+name: probe
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/probe.yml"]
+jobs:
+  p:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          Q=$(python3 -c "import urllib.parse;print(urllib.parse.quote('從家門口出發，大約十二分鐘。'))")
+          for C in tw-ob gtx; do for TL in zh-TW zh-tw zh-CN; do
+            for REF in "" "https://coolalxeanderyi.github.io/Map/"; do
+              U="https://translate.google.com/translate_tts?ie=UTF-8&client=$C&tl=$TL&ttsspeed=0.9&q=$Q"
+              if [ -z "$REF" ]; then R=$(curl -s -o /tmp/a -w "%{http_code} %{content_type} %{size_download}" -A "Mozilla/5.0" "$U"); else R=$(curl -s -o /tmp/a -w "%{http_code} %{content_type} %{size_download}" -A "Mozilla/5.0" -e "$REF" "$U"); fi
+              echo "client=$C tl=$TL referer=${REF:-none} -> $R"
+            done; done; done
